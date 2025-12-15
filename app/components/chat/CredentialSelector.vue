@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const props = withDefaults(defineProps<{
   multiple?: boolean
-  projectCode?: string | null
+  projectId?: string | null
   disabled?: boolean
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   variant?: string
@@ -16,13 +16,13 @@ const props = withDefaults(defineProps<{
 const model = defineModel<string[] | string | null>({})
 
 const app = useAppConfig()
-const { items } = useCredentials(computed(() => props.projectCode))
+const { items } = useCredentials(computed(() => props.projectId))
 
 const selectItems = computed(() => {
   const credentials = items.value.map((item) => {
     return {
       label: item.name,
-      value: item.code,
+      value: item.id,
       icon: 'i-lucide-key'
     }
   })

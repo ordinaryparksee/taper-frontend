@@ -5,7 +5,7 @@ import { filesize } from 'filesize'
 import { onMounted, onUnmounted, watch } from 'vue'
 
 const props = defineProps<{
-  knowledgeCode: string
+  knowledgeId: string
 }>()
 
 const toast = useToast()
@@ -20,9 +20,9 @@ const {
   getStatusVariant,
   getStatusColor,
   watcherId
-} = useKnowledgeFiles(props.knowledgeCode)
+} = useKnowledgeFiles(props.knowledgeId)
 
-function getItemMenu(file: KnowledgeFile): DropdownMenuItem[] {
+function getItemMenu(file: KnowledgeFileType): DropdownMenuItem[] {
   return [
     {
       type: 'label',
@@ -33,7 +33,7 @@ function getItemMenu(file: KnowledgeFile): DropdownMenuItem[] {
       icon: 'i-lucide-refresh-ccw',
       async onSelect() {
         if (!confirm('Are you sure you want to reset state?')) return
-        await $api(`/knowledges/${props.knowledgeCode}/pipeline/reset`, {
+        await $api(`/knowledges/${props.knowledgeId}/pipeline/reset`, {
           method: 'POST',
           body: {
             file_ids: [file.file_id]
@@ -50,7 +50,7 @@ function getItemMenu(file: KnowledgeFile): DropdownMenuItem[] {
       color: 'error',
       async onSelect() {
         if (!confirm('Are you sure you want to delete this file?')) return
-        await $api(`/knowledges/${props.knowledgeCode}/files`, {
+        await $api(`/knowledges/${props.knowledgeId}/files`, {
           method: 'DELETE',
           body: {
             file_ids: [file.file_id]

@@ -7,12 +7,12 @@ const props = withDefaults(defineProps<{
   selectable?: boolean
   multiple?: boolean
   control?: boolean
-  projectCode?: string | null
+  projectId?: string | null
 }>(), {
   selectable: false,
   multiple: false,
   control: false,
-  projectCode: null
+  projectId: null
 })
 
 const app = useAppConfig()
@@ -24,8 +24,8 @@ const toast = useToast()
 const { project } = useProject()
 const isOpenUploader = ref(false)
 const isOpenSearch = ref(false)
-const uploaderOpened = ref<Knowledge>()
-const exploreOpened = ref<Knowledge>()
+const uploaderOpened = ref<KnowledgeType>()
+const exploreOpened = ref<KnowledgeType>()
 
 const {
   queryInput,
@@ -38,17 +38,17 @@ const {
   refresh,
   search,
   remove
-} = useKnowledges(computed(() => props.projectCode || project.value?.code))
+} = useKnowledges(computed(() => props.projectId || project.value?.id))
 
 const { $api } = useNuxtApp()
 const resetting = ref(false)
 
-async function onReset(knowledge: Knowledge) {
+async function onReset(knowledge: KnowledgeType) {
   const confirmed = confirm(`This will delete all indexed vectors and reset file processing status for '${knowledge.name}'. This action cannot be undone.`)
   if (!confirmed) return
   try {
     resetting.value = true
-    await $api(`/knowledges/${knowledge.code}/reset`, {
+    await $api(`/knowledges/${knowledge.id}/reset`, {
       method: 'POST'
     })
     toast.add({
@@ -72,37 +72,37 @@ async function onReset(knowledge: Knowledge) {
 
 const limitItems = ref([5, 10, 20])
 
-function isSelected(code: string) {
-  const index = selected.value.indexOf(code)
+function isSelected(id: string) {
+  const index = selected.value.indexOf(id)
   return index > -1
 }
 
-function toggle(code: string) {
-  const index = selected.value.indexOf(code)
+function toggle(id: string) {
+  const index = selected.value.indexOf(id)
   if (index > -1) {
     const newValue = [...selected.value]
     newValue.splice(index, 1)
     selected.value = [...newValue]
   } else {
     if (props.multiple) {
-      selected.value = [...selected.value, code]
+      selected.value = [...selected.value, id]
     } else {
-      selected.value = [code]
+      selected.value = [id]
     }
   }
 }
 
-function getRowItems(row: Row<Knowledge>): DropdownMenuItem[] {
+function getRowItems(row: Row<KnowledgeType>): DropdownMenuItem[] {
   return [
     { type: 'label', label: 'Actions' },
     {
-      label: 'Copy knowledge code',
+      label: 'Copy knowledge id',
       icon: 'i-lucide-copy',
       onSelect() {
-        navigator.clipboard.writeText(row.original.code.toString())
+        navigator.clipboard.writeText(row.original.id.toString())
         toast.add({
           title: 'Copied to clipboard',
-          description: 'Knowledge code copied to clipboard'
+          description: 'Knowledge id copied to clipboard'
         })
       }
     },
@@ -110,7 +110,7 @@ function getRowItems(row: Row<Knowledge>): DropdownMenuItem[] {
     {
       label: 'View knowledge details',
       icon: 'i-lucide-list',
-      to: `/knowledges/${row.original.code}`
+      to: `/knowledges/${row.original.id}`
     },
     {
       label: 'Manage files',
@@ -141,15 +141,15 @@ function getRowItems(row: Row<Knowledge>): DropdownMenuItem[] {
       icon: 'i-lucide-trash',
       color: 'error',
       async onSelect() {
-        await remove(row.original.code)
+        await remove(row.original.id)
       }
     }
   ]
 }
 
-function onSelectClick(e: MouseEvent, code: string) {
+function onSelectClick(e: MouseEvent, id: string) {
   e.stopPropagation()
-  toggle(code)
+  toggle(id)
   if (props.multiple) {
     model.value = selected.value
   } else {
@@ -157,18 +157,18 @@ function onSelectClick(e: MouseEvent, code: string) {
   }
 }
 
-function getRowAttrs(row: Knowledge) {
+function getRowAttrs(row: KnowledgeType) {
   return {
     class: [
       'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
-      props.selectable && selected.value?.includes(row.code) ? 'bg-gray-50/60 dark:bg-gray-800/60' : ''
+      props.selectable && selected.value?.includes(row.id) ? 'bg-gray-50/60 dark:bg-gray-800/60' : ''
     ].join(' '),
-    onClick: () => toggle(row.code)
+    onClick: () => toggle(row.id)
   }
 }
 
-const columns = computed<TableColumn<Knowledge>[]>(() => {
-  const cols: TableColumn<Knowledge>[] = []
+const columns = computed<TableColumn<KnowledgeType>[]>(() => {
+  const cols: TableColumn<KnowledgeType>[] = []
 
   // Selection controls
   if (props.selectable && props.multiple) {
@@ -176,8 +176,8 @@ const columns = computed<TableColumn<Knowledge>[]>(() => {
       id: 'select',
       header: () => {
         const pageItems = items.value
-        const pageCodes = pageItems.map(i => i.code)
-        const pageSelected = pageCodes.filter(code => selected.value.includes(code))
+        const pageIds = pageItems.map(i => i.id)
+        const pageSelected = pageIds.filter(id => selected.value.includes(id))
         const allSelected = pageItems.length > 0 && pageSelected.length === pageItems.length
         const someSelected = pageSelected.length > 0 && !allSelected
         return (
@@ -187,10 +187,10 @@ const columns = computed<TableColumn<Knowledge>[]>(() => {
             onUpdate:modelValue={(value: boolean | 'indeterminate') => {
               const shouldSelect = !!value
               if (shouldSelect) {
-                const merged = new Set([...selected.value, ...pageCodes])
+                const merged = new Set([...selected.value, ...pageIds])
                 selected.value = Array.from(merged)
               } else {
-                selected.value = selected.value.filter(code => !pageCodes.includes(code))
+                selected.value = selected.value.filter(id => !pageIds.includes(id))
               }
               model.value = selected.value
             }}
@@ -198,16 +198,16 @@ const columns = computed<TableColumn<Knowledge>[]>(() => {
         )
       },
       cell: ({ row }) => {
-        const code = row.original.code
+        const id = row.original.id
         return (
           <UCheckbox
-            modelValue={isSelected(code)}
+            modelValue={isSelected(id)}
             aria-label="Select row"
             onUpdate:modelValue={(value: boolean | 'indeterminate') => {
               if (value) {
-                if (!selected.value.includes(code)) selected.value = [...selected.value, code]
+                if (!selected.value.includes(id)) selected.value = [...selected.value, id]
               } else {
-                selected.value = selected.value.filter(c => c !== code)
+                selected.value = selected.value.filter(c => c !== id)
               }
               model.value = selected.value
             }}
@@ -241,7 +241,7 @@ const columns = computed<TableColumn<Knowledge>[]>(() => {
         <div class="flex items-center gap-2">
           <div>
             <p class="font-medium text-highlighted">{row.original.name}</p>
-            <p>{row.original.code}</p>
+            <p>{row.original.id}</p>
           </div>
         </div>
       ),
@@ -262,7 +262,7 @@ const columns = computed<TableColumn<Knowledge>[]>(() => {
       header: () => {},
       cell: ({ row }) => (
         <div class="text-right px-1" onClick={(e: MouseEvent) => e.stopPropagation()}>
-          <UDropdownMenu items={getRowItems(row as unknown as Row<Knowledge>)} content={{ align: 'end' }}>
+          <UDropdownMenu items={getRowItems(row as unknown as Row<KnowledgeType>)} content={{ align: 'end' }}>
             <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" class="ml-auto" size="xs" />
           </UDropdownMenu>
         </div>
@@ -281,15 +281,15 @@ const columns = computed<TableColumn<Knowledge>[]>(() => {
       id: 'actions',
       header: () => {},
       cell: ({ row }) => {
-        const code = row.original.code
-        const _isSelected = isSelected(code)
+        const id = row.original.id
+        const _isSelected = isSelected(id)
         return (
           <div class="text-right px-1">
             <UButton
               size="xs"
               color={_isSelected ? 'primary' : 'neutral'}
               variant={_isSelected ? 'solid' : 'outline'}
-              onClick={(e: MouseEvent) => onSelectClick(e, code)}
+              onClick={(e: MouseEvent) => onSelectClick(e, id)}
             >
               {_isSelected ? 'Selected' : 'Select'}
             </UButton>
@@ -375,8 +375,8 @@ const columns = computed<TableColumn<Knowledge>[]>(() => {
       <template #body>
         <KnowledgeUploader
           v-if="project"
-          :project-code="project.code"
-          :knowledge-code="uploaderOpened.code"
+          :project-id="project.id"
+          :knowledge-id="uploaderOpened.id"
           class="h-full"
         />
       </template>

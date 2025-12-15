@@ -1,11 +1,12 @@
 <script setup lang="tsx">
 import { UButton } from '#components'
 
+const app = useAppConfig()
 const { $api } = useNuxtApp()
 
 const props = defineProps<{
-  projectCode: string
-  knowledgeCode: string
+  projectId: string
+  knowledgeId: string
 }>()
 
 const fileIds = ref([])
@@ -13,7 +14,7 @@ const splitMode = ref<KnowledgeSplitMode>(null)
 const fileList = ref()
 const fileManager = ref()
 
-const { data: knowledge } = useApi<Knowledge>(`/knowledges/${props.knowledgeCode}`)
+const { data: knowledge } = useApi<KnowledgeType>(`/knowledges/${props.knowledgeId}`)
 
 watch(() => knowledge.value?.split_mode, (val) => {
   if (val !== undefined) {
@@ -29,7 +30,7 @@ const splitModeOptions = [
 
 async function onConfirmUpload() {
   if (fileIds.value) {
-    await $api(`/knowledges/${props.knowledgeCode}/files`, {
+    await $api(`/knowledges/${props.knowledgeId}/files`, {
       method: 'POST',
       body: {
         file_ids: fileIds.value,
@@ -49,7 +50,7 @@ async function onConfirmUpload() {
     >
       <KnowledgeFileList
         ref="fileList"
-        :knowledge-code="props.knowledgeCode"
+        :knowledge-id="props.knowledgeId"
       />
     </div>
     <div class="flex mb-4">
@@ -58,7 +59,7 @@ async function onConfirmUpload() {
       </div>
       <div>
         <UButton
-          icon="i-lucide-upload"
+          :icon="app.ui.icons.upload"
           variant="ghost"
           :disabled="fileIds.length < 1"
           @click="onConfirmUpload"
@@ -122,7 +123,7 @@ async function onConfirmUpload() {
         <FileManager
           ref="fileManager"
           v-model="fileIds"
-          :namespace="`${props.projectCode}/knowledge/${props.knowledgeCode}`"
+          :namespace="`${props.projectId}/knowledge/${props.knowledgeId}`"
           multiple
           class="w-full"
         />

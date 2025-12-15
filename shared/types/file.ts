@@ -1,14 +1,23 @@
-export interface File {
-  id: string
-  namespace: string
-  driver: 'S3' | 'LOCAL'
-  name: string
-  type: string
-  size: number
-  path: string
-  status: 'PENDING' | 'UPLOADING' | 'UPLOADED' | 'COMPLETED'
-  expires_at: Date | null
-  expired_at: Date | null
-  created_at: Date
-  updated_at: Date
-}
+import { z } from 'zod'
+
+export type FileDriver = 'S3' | 'LOCAL'
+export type FileStatus = 'PENDING' | 'UPLOADING' | 'UPLOADED' | 'COMPLETED'
+
+const File =z.object({
+  id: z.string(),
+  namespace: z.string(),
+  driver: z.enum(['S3', 'LOCAL']),
+  name: z.string(),
+  type: z.string(),
+  size: z.number(),
+  path: z.string(),
+  status: z.enum(['PENDING', 'UPLOADING', 'UPLOADED', 'COMPLETED']),
+  expires_at: z.string().nullable(),
+  expired_at: z.string().nullable(),
+  created_at: z.string(),
+  updated_at: z.string()
+}).register(z.globalRegistry, {
+  id: 'File'
+})
+export type FileType = z.infer<typeof File>
+export const FileSchema = File.toJSONSchema()

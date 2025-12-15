@@ -28,7 +28,7 @@ const { project } = useProject()
     </template>
 
     <template #body>
-      <ConversationList v-if="project" :project-code="project.code" control />
+      <ConversationList v-if="project" :project-id="project.id" control />
     </template>
   </UDashboardPanel>
 </template>

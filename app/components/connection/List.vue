@@ -7,13 +7,13 @@ const props = withDefaults(defineProps<{
   selectable?: boolean
   multiple?: boolean
   control?: boolean
-  projectCode?: string | null
+  projectId?: string | null
   drivers?: string[]
 }>(), {
   selectable: false,
   multiple: false,
   control: false,
-  projectCode: null,
+  projectId: null,
   drivers: () => []
 })
 
@@ -39,33 +39,33 @@ const {
   search,
   remove
 } = useConnections({
-  projectCode: computed(() => props.projectCode || project.value?.code),
+  projectId: computed(() => props.projectId || project.value?.id),
   drivers: computed(() => props.drivers)
 })
 
 const limitItems = ref([5, 10, 20])
 
-function isSelected(code: string) {
-  const index = selected.value.indexOf(code)
+function isSelected(id: string) {
+  const index = selected.value.indexOf(id)
   return index > -1
 }
 
-function toggle(code: string) {
-  const index = selected.value.indexOf(code)
+function toggle(id: string) {
+  const index = selected.value.indexOf(id)
   if (index > -1) {
     const newValue = [...selected.value]
     newValue.splice(index, 1)
     selected.value = [...newValue]
   } else {
     if (props.multiple) {
-      selected.value = [...selected.value, code]
+      selected.value = [...selected.value, id]
     } else {
-      selected.value = [code]
+      selected.value = [id]
     }
   }
 }
 
-function getRowItems(row: Row<Connection>): DropdownMenuItem[] {
+function getRowItems(row: Row<ConnectionSchema>): DropdownMenuItem[] {
   return [
     {
       type: 'label',
@@ -75,7 +75,7 @@ function getRowItems(row: Row<Connection>): DropdownMenuItem[] {
       label: 'Copy connection uri',
       icon: 'i-lucide-copy',
       onSelect() {
-        navigator.clipboard.writeText(row.original.code.toString())
+        navigator.clipboard.writeText(row.original.id.toString())
         toast.add({
           title: 'Copied to clipboard',
           description: 'Connection uri copied to clipboard'
@@ -86,7 +86,7 @@ function getRowItems(row: Row<Connection>): DropdownMenuItem[] {
     {
       label: 'View connection details',
       icon: 'i-lucide-list',
-      to: `/connections/${row.original.code}`
+      to: `/connections/${row.original.id}`
     },
     { type: 'separator' },
     {
@@ -94,15 +94,15 @@ function getRowItems(row: Row<Connection>): DropdownMenuItem[] {
       icon: 'i-lucide-trash',
       color: 'error',
       async onSelect() {
-        await remove(row.original.code)
+        await remove(row.original.id)
       }
     }
   ]
 }
 
-function onSelectClick(e: MouseEvent, code: string) {
+function onSelectClick(e: MouseEvent, id: string) {
   e.stopPropagation()
-  toggle(code)
+  toggle(id)
   if (props.multiple) {
     model.value = selected.value
   } else {
@@ -110,26 +110,26 @@ function onSelectClick(e: MouseEvent, code: string) {
   }
 }
 
-function getRowAttrs(row: Connection) {
+function getRowAttrs(row: ConnectionSchema) {
   return {
     class: [
       'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
-      props.selectable && selected.value?.includes(row.code) ? 'bg-gray-50/60 dark:bg-gray-800/60' : ''
+      props.selectable && selected.value?.includes(row.id) ? 'bg-gray-50/60 dark:bg-gray-800/60' : ''
     ].join(' '),
-    onClick: () => toggle(row.code)
+    onClick: () => toggle(row.id)
   }
 }
 
-const columns = computed<TableColumn<Connection>[]>(() => {
-  const cols: TableColumn<Connection>[] = []
+const columns = computed<TableColumn<ConnectionSchema>[]>(() => {
+  const cols: TableColumn<ConnectionSchema>[] = []
 
   if (props.selectable && props.multiple) {
     cols.push({
       id: 'select',
       header: () => {
         const pageItems = items.value
-        const pageCodes = pageItems.map(i => i.code)
-        const pageSelected = pageCodes.filter(code => selected.value.includes(code))
+        const pageIds = pageItems.map(i => i.id)
+        const pageSelected = pageIds.filter(id => selected.value.includes(id))
         const allSelected = pageItems.length > 0 && pageSelected.length === pageItems.length
         const someSelected = pageSelected.length > 0 && !allSelected
         return (
@@ -139,10 +139,10 @@ const columns = computed<TableColumn<Connection>[]>(() => {
             onUpdate:modelValue={(value: boolean | 'indeterminate') => {
               const shouldSelect = !!value
               if (shouldSelect) {
-                const merged = new Set([...selected.value, ...pageCodes])
+                const merged = new Set([...selected.value, ...pageIds])
                 selected.value = Array.from(merged)
               } else {
-                selected.value = selected.value.filter(code => !pageCodes.includes(code))
+                selected.value = selected.value.filter(id => !pageIds.includes(id))
               }
               model.value = selected.value
             }}
@@ -150,17 +150,17 @@ const columns = computed<TableColumn<Connection>[]>(() => {
         )
       },
       cell: ({ row }) => {
-        const code = row.original.code
+        const id = row.original.id
         return (
           <UCheckbox
-            modelValue={isSelected(code)}
+            modelValue={isSelected(id)}
             aria-label="Select row"
             onUpdate:modelValue={(value: boolean | 'indeterminate') => {
               // toggle selection for this row
               if (value) {
-                if (!selected.value.includes(code)) selected.value = [...selected.value, code]
+                if (!selected.value.includes(id)) selected.value = [...selected.value, id]
               } else {
-                selected.value = selected.value.filter(c => c !== code)
+                selected.value = selected.value.filter(c => c !== id)
               }
               model.value = selected.value
             }}
@@ -228,7 +228,7 @@ const columns = computed<TableColumn<Connection>[]>(() => {
           }
           <div>
             <p class="font-medium text-highlighted">{row.original.name}</p>
-            <p>{row.original.code}</p>
+            <p>{row.original.id}</p>
           </div>
         </div>
       ),
@@ -261,7 +261,7 @@ const columns = computed<TableColumn<Connection>[]>(() => {
       cell: ({ row }) => (
         <div class="text-right px-1" onClick={(e: MouseEvent) => e.stopPropagation()}>
           <UDropdownMenu
-            items={getRowItems(row as unknown as Row<Connection>)}
+            items={getRowItems(row as unknown as Row<ConnectionSchema>)}
             content={{ align: 'end' }}
           >
             <UButton
@@ -288,15 +288,15 @@ const columns = computed<TableColumn<Connection>[]>(() => {
       id: 'actions',
       header: () => {},
       cell: ({ row }) => {
-        const code = row.original.code
-        const _isSelected = isSelected(code)
+        const id = row.original.id
+        const _isSelected = isSelected(id)
         return (
           <div class="text-right px-1">
             <UButton
               size="xs"
               color={_isSelected ? 'primary' : 'neutral'}
               variant={_isSelected ? 'solid' : 'outline'}
-              onClick={(e: MouseEvent) => onSelectClick(e, code)}
+              onClick={(e: MouseEvent) => onSelectClick(e, id)}
             >
               {_isSelected ? 'Selected' : 'Select'}
             </UButton>

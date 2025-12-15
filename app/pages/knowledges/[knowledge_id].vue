@@ -13,13 +13,13 @@ const route = useRoute()
 const toast = useToast()
 const { project } = useProject()
 
-const isNew = computed(() => route.params.knowledge_code === '@new')
+const isNew = computed(() => route.params.knowledge_id === '@new')
 const useOwnApiKey = ref(false)
 const isExternalConnection = ref(false)
 
 const { rawModels: models, formatModelName, detectIcon, detectAvatar } = useModels('embedding')
 
-const { data, refresh, execute } = useApi<Knowledge>(`/knowledges/${route.params.knowledge_code}`, {
+const { data, refresh, execute } = useApi<BaseResponse<KnowledgeType>>(`/knowledges/${route.params.knowledge_id}`, {
   immediate: false
 })
 
@@ -43,19 +43,19 @@ const splitModeOptions = [
 if (!isNew.value) {
   await execute()
 
-  if (data.value?.embedding_model_credential_code) {
+  if (data.value?.data.embedding_model_credential_id) {
     useOwnApiKey.value = true
   }
 
-  if (data.value?.connection_code) {
+  if (data.value?.data.connection_id) {
     isExternalConnection.value = true
   }
 }
 
 const knowledgeSchema = z.object({
   name: z.string().min(2, 'Too short'),
-  connection_code: z.string().min(1, 'Required').nullish(),
-  embedding_model_credential_code: z.string().min(1, 'Required').nullish(),
+  connection_id: z.string().min(1, 'Required').nullish(),
+  embedding_model_credential_id: z.string().min(1, 'Required').nullish(),
   embedding_model: z.string().min(1, 'Required'),
   embedding_dimension: z.number().int().positive('Must be a positive number'),
   chunk_strategy: z.string().min(1, 'Required'),
@@ -64,35 +64,35 @@ const knowledgeSchema = z.object({
   language: z.string().optional(),
   split_mode: z.string().nullish()
 }).refine((val) => {
-  // 가지고 있는 API_KEY를 사용하는 경우에만 embedding_model_credential_code 필수
-  return !useOwnApiKey.value || (typeof val.embedding_model_credential_code === 'string' && val.embedding_model_credential_code.length > 0)
+  // 가지고 있는 API_KEY를 사용하는 경우에만 embedding_model_credential_id 필수
+  return !useOwnApiKey.value || (typeof val.embedding_model_credential_id === 'string' && val.embedding_model_credential_id.length > 0)
 }, {
-  path: ['embedding_model_credential_code'],
+  path: ['embedding_model_credential_id'],
   message: 'Required'
 }).refine((val) => {
-  // 외부 커넥션을 사용하는 경우에만 connection_code 필수
-  return !isExternalConnection.value || (typeof val.connection_code === 'string' && val.connection_code.length > 0)
+  // 외부 커넥션을 사용하는 경우에만 connection_id 필수
+  return !isExternalConnection.value || (typeof val.connection_id === 'string' && val.connection_id.length > 0)
 }, {
-  path: ['connection_code'],
+  path: ['connection_id'],
   message: 'Required'
 })
-type KnowledgeSchema = z.output<typeof knowledgeSchema>
+type KnowledgeFormSchema = z.output<typeof knowledgeSchema>
 
 const form = ref<HTMLFormElement>()
 const submitting = ref(false)
 
-const knowledge = reactive<Partial<KnowledgeSchema>>({
-  name: data.value?.name || '',
-  connection_code: data.value?.connection_code ?? null,
-  embedding_model_credential_code: data.value?.embedding_model_credential_code ?? null,
-  embedding_model: data.value?.embedding_model,
-  embedding_dimension: data.value?.embedding_dimension,
-  chunk_strategy: data.value?.chunk_strategy ?? chunkStrategyOptions[0]?.value,
-  chunk_size: data.value?.chunk_size ?? 1000,
-  chunk_overlap: data.value?.chunk_overlap ?? 100,
-  language: data.value?.language ?? languageOptions[0]?.value,
-  split_mode: data.value?.split_mode ?? splitModeOptions[0]?.value
-} as KnowledgeSchema)
+const knowledge = reactive<Partial<KnowledgeFormSchema>>({
+  name: data.value?.data.name || '',
+  connection_id: data.value?.data.connection_id ?? null,
+  embedding_model_credential_id: data.value?.data.embedding_model_credential_id ?? null,
+  embedding_model: data.value?.data.embedding_model,
+  embedding_dimension: data.value?.data.embedding_dimension,
+  chunk_strategy: data.value?.data.chunk_strategy ?? chunkStrategyOptions[0]?.value,
+  chunk_size: data.value?.data.chunk_size ?? 1000,
+  chunk_overlap: data.value?.data.chunk_overlap ?? 100,
+  language: data.value?.data.language ?? languageOptions[0]?.value,
+  split_mode: data.value?.data.split_mode ?? splitModeOptions[0]?.value
+} as KnowledgeFormSchema)
 
 const modelOptions = computed(() => (models.value || []).map((m) => {
   const value = `${m.provider}/${m.model}`
@@ -120,13 +120,13 @@ async function submit() {
   form.value?.submit()
 }
 
-async function onSubmit(event: FormSubmitEvent<KnowledgeSchema>) {
+async function onSubmit(event: FormSubmitEvent<KnowledgeFormSchema>) {
   try {
     submitting.value = true
-    await $api<Knowledge>(data.value ? `/knowledges/${data.value.code}` : '/knowledges', {
+    await $api<KnowledgeType>(data.value ? `/knowledges/${data.value.data.id}` : '/knowledges', {
       method: data.value ? 'PUT' : 'POST',
       params: {
-        project_code: project.value?.code
+        project_id: project.value?.id
       },
       body: {
         ...event.data
@@ -150,7 +150,7 @@ async function onSubmit(event: FormSubmitEvent<KnowledgeSchema>) {
 
 const items = computed(() => [
   { label: 'Knowledges', icon: app.ui.icons.knowledge, to: '/knowledges' },
-  { label: data.value?.name || 'New' }
+  { label: data.value?.data.name || 'New' }
 ])
 
 const resetting = ref(false)
@@ -162,7 +162,7 @@ async function onReset() {
 
   try {
     resetting.value = true
-    await $api(`/knowledges/${data.value?.code}/reset`, {
+    await $api(`/knowledges/${data.value?.data.id}/reset`, {
       method: 'POST'
     })
     toast.add({
@@ -341,13 +341,13 @@ async function onReset() {
           >
             <USwitch
               v-model="useOwnApiKey"
-              @change="knowledge.embedding_model_credential_code = null"
+              @change="knowledge.embedding_model_credential_id = null"
             />
           </UFormField>
 
           <UFormField
             v-if="useOwnApiKey"
-            name="embedding_model_credential_code"
+            name="embedding_model_credential_id"
             label="Credential"
             description="Select which connection this knowledge belongs to."
             :required="useOwnApiKey"
@@ -355,9 +355,9 @@ async function onReset() {
           >
             <div class="flex items-center gap-3">
               <CredentialSelector
-                v-model="knowledge.embedding_model_credential_code"
+                v-model="knowledge.embedding_model_credential_id"
                 :multiple="false"
-                :project-code="project?.code || null"
+                :project-id="project?.id || null"
                 :disabled="submitting"
                 button-label="Select credential"
               />
@@ -371,13 +371,13 @@ async function onReset() {
           >
             <USwitch
               v-model="isExternalConnection"
-              @change="knowledge.connection_code = null"
+              @change="knowledge.connection_id = null"
             />
           </UFormField>
 
           <UFormField
             v-if="isExternalConnection"
-            name="connection_code"
+            name="connection_id"
             label="Connection"
             description="Select which connection this knowledge belongs to."
             :required="isExternalConnection"
@@ -385,9 +385,9 @@ async function onReset() {
           >
             <div class="flex items-center gap-3">
               <ConnectionSelector
-                v-model="knowledge.connection_code"
+                v-model="knowledge.connection_id"
                 :multiple="false"
-                :project-code="project?.code || null"
+                :project-id="project?.id || null"
                 :disabled="submitting"
                 :drivers="['OPENSEARCH', 'PGVECTOR']"
                 button-label="Select connection"
@@ -447,7 +447,7 @@ async function onReset() {
             </UFormField>
           </div>
         </UPageCard>
-        <KnowledgeFileList v-if="data" :knowledge-code="data.code" />
+        <KnowledgeFileList v-if="data" :knowledge-id="data.data.id" />
 
         <UPageCard
           v-if="!isNew"

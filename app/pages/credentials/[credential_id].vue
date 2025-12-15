@@ -1,6 +1,5 @@
 <script setup lang="tsx">
 import type { FormSubmitEvent, SelectItem } from '@nuxt/ui'
-import type { Project, Credential } from '#shared/types'
 import * as z from 'zod'
 
 definePageMeta({
@@ -11,10 +10,10 @@ const app = useAppConfig()
 const { $api } = useNuxtApp()
 const route = useRoute()
 const toast = useToast()
-const project = useState<Project>('project')
-const isNew = computed(() => route.params.credential_code === '@new')
+const { project } = useProject()
+const isNew = computed(() => route.params.credential_id === '@new')
 
-const { data, refresh, execute } = useApi<Credential>(`/credentials/${route.params.credential_code}`, {
+const { data, refresh, execute } = useApi<BaseResponse<CredentialSchema>>(`/credentials/${route.params.credential_id}`, {
   immediate: false,
   lazy: true
 })
@@ -27,30 +26,30 @@ const credentialSchema = z.object({
   name: z.string().min(2, 'Too short'),
   type: z.enum(['BASIC_AUTH', 'API_KEY', 'SSH', 'HTTP_HEADER'])
 })
-type CredentialSchema = z.output<typeof credentialSchema>
+type CredentialDataSchema = z.output<typeof credentialSchema>
 
 const form = ref<HTMLFormElement>()
 const submitting = ref(false)
 
-const credential = reactive<Partial<CredentialSchema>>({
-  name: data.value?.name || '',
-  type: data.value?.type || 'BASIC_AUTH'
+const credential = reactive<Partial<CredentialDataSchema>>({
+  name: data.value?.data.name || '',
+  type: data.value?.data.type || 'BASIC_AUTH'
 })
 
 // BASIC_AUTH
-const basicAuthId = ref<string>(credential.type === 'BASIC_AUTH' ? (data.value?.data.username as string ?? '') : '')
-const basicAuthPassword = ref<string>(credential.type === 'BASIC_AUTH' ? (data.value?.data.password as string ?? '') : '')
+const basicAuthId = ref<string>(credential.type === 'BASIC_AUTH' ? (data.value?.data.data.username as string ?? '') : '')
+const basicAuthPassword = ref<string>(credential.type === 'BASIC_AUTH' ? (data.value?.data.data.password as string ?? '') : '')
 
 // API Key
-const apiKey = ref<string>(credential.type === 'API_KEY' ? (data.value?.data.token as string ?? '') : '')
+const apiKey = ref<string>(credential.type === 'API_KEY' ? (data.value?.data.data.token as string ?? '') : '')
 
 // SSH
-const sshUsername = ref<string>(credential.type === 'SSH' ? (data.value?.data.username as string ?? '') : '')
-const sshPassword = ref<string>(credential.type === 'SSH' ? (data.value?.data.password as string ?? '') : '')
-const sshPrivateKey = ref<string>(credential.type === 'SSH' ? (data.value?.data.private_key as string ?? '') : '')
+const sshUsername = ref<string>(credential.type === 'SSH' ? (data.value?.data.data.username as string ?? '') : '')
+const sshPassword = ref<string>(credential.type === 'SSH' ? (data.value?.data.data.password as string ?? '') : '')
+const sshPrivateKey = ref<string>(credential.type === 'SSH' ? (data.value?.data.data.private_key as string ?? '') : '')
 
 // HTTP Header
-const httpHeader = ref<string>(credential.type === 'HTTP_HEADER' ? JSON.stringify(data.value?.data) : '{}')
+const httpHeader = ref<string>(credential.type === 'HTTP_HEADER' ? JSON.stringify(data.value?.data.data) : '{}')
 
 const credentialData = computed(() => {
   if (credential.type === 'BASIC_AUTH') {
@@ -82,7 +81,7 @@ async function submit() {
   form.value?.submit()
 }
 
-async function onSubmit(event: FormSubmitEvent<CredentialSchema>) {
+async function onSubmit(event: FormSubmitEvent<CredentialDataSchema>) {
   try {
     submitting.value = true
     const body = {
@@ -90,9 +89,11 @@ async function onSubmit(event: FormSubmitEvent<CredentialSchema>) {
       type: event.data.type,
       data: credentialData.value
     }
-    await $api<Credential>(data.value ? `/credentials/${data.value.code}` : '/credentials', {
+    await $api<BaseResponse<CredentialSchema>>(data.value ? `/credentials/${data.value.data.id}` : '/credentials', {
       method: data.value ? 'PUT' : 'POST',
-      params: { project_code: project.value?.code },
+      params: {
+        project_id: project.value?.id
+      },
       body
     })
     toast.add({
@@ -121,7 +122,7 @@ const typeIcon = computed(() => typeItems.value.find(item => item.value === cred
 
 const items = computed(() => [
   { label: 'Credentials', icon: app.ui.icons.credential, to: '/credentials' },
-  { label: data.value?.name || 'New' }
+  { label: data.value?.data.name || 'New' }
 ])
 </script>
 

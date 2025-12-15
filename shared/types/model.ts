@@ -1,5 +1,7 @@
-export interface Model {
-  type: 'chat' | 'embedding' | 'rerank'
+export type ModelType = 'chat' | 'embedding' | 'rerank'
+
+export interface ModelSchema {
+  type: ModelType
   provider: string
   model: string
   input_tokens: number

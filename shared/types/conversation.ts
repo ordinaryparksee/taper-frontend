@@ -1,9 +1,9 @@
 export type ConversationStatus = 'PENDING' | 'COMPLETED' | 'FAILED'
 
-export interface Conversation {
-  project_code: string
-  user_code: string | null
-  code: string
+export interface ConversationSchema {
+  id: string
+  project_id: string
+  user_id: string | null
   subject: string
   status: ConversationStatus
   created_at: Date

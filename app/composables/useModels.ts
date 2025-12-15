@@ -1,4 +1,4 @@
-import type { AvatarProps } from '#ui/types'
+import type { AvatarProps } from '@nuxt/ui'
 
 export function formatModelName(modelId: string): string {
   const acronyms = ['gpt'] // words that should be uppercase
@@ -52,10 +52,10 @@ export function detectAvatar(_model?: string | null): AvatarProps | undefined {
 }
 
 export function useModels(type?: 'chat' | 'embedding' | 'rerank' | null) {
-  const allModels = useState<Model[]>('all_models', () => [])
-  const chatModels = useState<Model[]>('chat_models', () => [])
-  const embeddingModels = useState<Model[]>('embedding_models', () => [])
-  const rerankModels = useState<Model[]>('rerank_models', () => [])
+  const allModels = useState<ModelSchema[]>('all_models', () => [])
+  const chatModels = useState<ModelSchema[]>('chat_models', () => [])
+  const embeddingModels = useState<ModelSchema[]>('embedding_models', () => [])
+  const rerankModels = useState<ModelSchema[]>('rerank_models', () => [])
 
   let rawModels = allModels
   if (type === 'chat') {
@@ -67,16 +67,18 @@ export function useModels(type?: 'chat' | 'embedding' | 'rerank' | null) {
   }
 
   if (rawModels.value.length === 0) {
-    const { data } = useApi<Model[]>(`/models`, {
+    const { data } = useApi<ListResponse<ModelSchema>>(`/models`, {
       params: {
         type
       },
-      default: () => [] as Model[]
+      default: () => ({
+        data: [] as ModelSchema[]
+      })
     })
 
     watch(data, (newData) => {
-      if (newData && newData.length > 0) {
-        rawModels.value = newData
+      if (newData && newData.data && newData.data.length > 0) {
+        rawModels.value = newData.data
       }
     }, { immediate: true })
   }

@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import type { Credential } from '#shared/types'
-
 const props = withDefaults(defineProps<{
   multiple?: boolean
-  projectCode?: string | null
+  projectId?: string | null
   buttonLabel?: string
   disabled?: boolean
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
@@ -31,7 +29,7 @@ if (props.multiple) {
 }
 
 const isOpen = ref(false)
-const selectedItems = ref<Credential[] | null>(null)
+const selectedItems = ref<CredentialSchema[] | null>(null)
 
 function open() {
   if (props.disabled) return
@@ -100,7 +98,7 @@ function confirm() {
             :selected="selected"
             :selectable="true"
             :multiple="props.multiple"
-            :project-code="props.projectCode"
+            :project-id="props.projectId"
             @update:selected="(value) => {
               selected = value
               if (!props.multiple) confirm()

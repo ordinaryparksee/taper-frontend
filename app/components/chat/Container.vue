@@ -6,16 +6,16 @@ import { useClipboard } from '@vueuse/core'
 import ChatStreamPre from '~/components/chat/PreStream.vue'
 
 const props = withDefaults(defineProps<{
-  projectCode: string
-  conversationCode?: string
+  projectId: string
+  conversationId?: string
   welcomeMessage?: string
 }>(), {
   welcomeMessage: 'How are you today?'
 })
 
 const emits = defineEmits<{
-  (e: 'onNewConversation', conversationCode: string): void
-  (e: 'onChatComplete', chat: Chat): void
+  (e: 'onNewConversation', conversationId: string): void
+  (e: 'onChatComplete', chat: ChatSchema): void
 }>()
 
 const components = {
@@ -27,15 +27,15 @@ const clipboard = useClipboard()
 const {
   dropzoneRef,
   isDragging,
-  conversationCode,
+  conversationId,
   newConversation,
   messages,
   prompt,
   loading,
   streamingMode,
   statefulMode,
-  credentialCode,
-  knowledgeCodes,
+  credentialId,
+  knowledgeIds,
   temperature,
   topP,
   windowSize,
@@ -49,7 +49,7 @@ const {
   addFiles,
   removeFile,
   lastChatId
-} = useChat(props.conversationCode)
+} = useChat(props.conversationId)
 
 const copied = ref(false)
 
@@ -62,9 +62,9 @@ const canUpload = computed(() => {
 })
 
 async function handleSubmit() {
-  if (!conversationCode.value) {
+  if (!conversationId.value) {
     const conversation = await newConversation()
-    emits('onNewConversation', conversation.code)
+    emits('onNewConversation', conversation.id)
   }
 
   const chat = await send()
@@ -73,9 +73,10 @@ async function handleSubmit() {
   }
 }
 
-function handleRegenerate(e: MouseEvent, message?: UIMessage<MessageMetadata>) {
-  if (message?.metadata) {
-    resend(message.metadata.id)
+function handleRegenerate(e: MouseEvent, message?: UIMessage) {
+  const _message = message as UIMessage<MessageMetadata>
+  if (_message?.metadata) {
+    resend(_message.metadata.id)
   } else if (lastChatId.value) {
     resend(lastChatId.value)
   }
@@ -155,36 +156,38 @@ function handleCopy(e: MouseEvent, message: UIMessage) {
           v-for="(part, index) in (message.parts as any[])"
           :key="`${message.id}-${part.type}-${index}${'state' in part ? `-${part.state}` : ''}`"
         >
-          <UCollapsible
+          <div
             v-if="part.type === 'data-knowledge' && part.data.length > 0"
+            class="mt-2"
           >
-            <UButton
-              leading-icon="i-lucide-library"
-              variant="subtle"
+            <UTabs
               color="neutral"
-              size="sm"
+              variant="link"
+              :items="[
+                {
+                  label: 'Referenced Knowledge',
+                  description: 'asdasd',
+                  slot: 'knowledge' as const
+                }
+              ]"
+              class="w-full"
             >
-              참고된 지식
-            </UButton>
-            <template #content>
-              <div class="p-3 text-xs text-muted bg-white rounded-sm">
-                <div class="flex flex-col gap-2">
-                  <div
-                    v-for="(source, sIndex) in part.data"
-                    :key="sIndex"
-                    class="p-2"
-                  >
-<!--                    <div class="font-medium mb-1">-->
-<!--                      {{ source.name || message.metadata.knowledge?.name || '알 수 없는 문서' }}-->
-<!--                    </div>-->
-                    <div class="line-clamp-2 opacity-80">
-                      {{ source.chunk_content }}
+              <template #knowledge>
+                <UAccordion
+                  :items="part.data.map((item: KnowledgeRetrievedItemType, index: number) => ({
+                    label: `${item.metadata?.filename} (${item.chunk_number})`,
+                    value: index
+                  }))"
+                >
+                  <template #content="{ item }">
+                    <div v-if="item.value !== undefined">
+                      {{ part.data[item.value].chunk_content }}
                     </div>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </UCollapsible>
+                  </template>
+                </UAccordion>
+              </template>
+            </UTabs>
+          </div>
           <ChatReasoning
             v-else-if="part.type === 'reasoning'"
             :text="part.text"
@@ -296,13 +299,13 @@ function handleCopy(e: MouseEvent, message: UIMessage) {
           />
           <ChatModelSelect v-model="model" />
           <ChatCredentialSelector
-            v-model="credentialCode"
-            :project-code="props.projectCode"
+            v-model="credentialId"
+            :project-id="props.projectId"
             class="min-w-30"
           />
           <ChatKnowledgeSelector
-            v-model="knowledgeCodes"
-            :project-code="props.projectCode"
+            v-model="knowledgeIds"
+            :project-id="props.projectId"
             multiple
             class="min-w-30"
           />

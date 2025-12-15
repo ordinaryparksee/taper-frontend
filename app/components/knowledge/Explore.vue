@@ -3,7 +3,7 @@ import type { TableColumn } from '@nuxt/ui'
 import { UButton, TruncateCell } from '#components'
 
 const props = defineProps<{
-  knowledge: Knowledge
+  knowledge: KnowledgeType
 }>()
 
 const queryInput = ref('')
@@ -20,7 +20,7 @@ const params = computed(() => ({
   limit: limit.value
 }))
 
-const { data, refresh } = useApi<PaginatedList<KnowledgeRetrievalItem>>(`/knowledges/${props.knowledge.code}/explore`, {
+const { data, refresh } = useApi<PaginatedList<KnowledgeRetrievedItemType>>(`/knowledges/${props.knowledge.id}/explore`, {
   query: params
 })
 
@@ -38,7 +38,7 @@ async function onSearch(newPage = 1) {
   }
 }
 
-const columns: TableColumn<KnowledgeRetrievalItem>[] = [
+const columns: TableColumn<KnowledgeRetrievedItemType>[] = [
   {
     id: 'expand',
     cell: ({ row }) => (

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const props = withDefaults(defineProps<{
   multiple?: boolean
-  projectCode?: string | null
+  projectId?: string | null
   disabled?: boolean
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   variant?: string
@@ -13,16 +13,16 @@ const props = withDefaults(defineProps<{
   variant: 'ghost'
 })
 
-const model = defineModel<string[] | string | null>({})
+const model = defineModel<string[] | string>({})
 
 const app = useAppConfig()
-const { items } = useKnowledges(computed(() => props.projectCode))
+const { items } = useKnowledges(computed(() => props.projectId))
 
 const selectItems = computed(() => {
   const knowledges = items.value.map((item) => {
     return {
       label: item.name,
-      value: item.code,
+      value: item.id,
       icon: app.ui.icons.knowledge
     }
   })

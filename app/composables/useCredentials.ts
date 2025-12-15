@@ -1,7 +1,6 @@
-import type { Credential } from '#shared/types'
 import type { FetchError } from 'ofetch'
 
-export function useCredentials(projectCode?: MaybeRefOrGetter<string | null | undefined>) {
+export function useCredentials(projectId?: MaybeRefOrGetter<string | null | undefined>) {
   const { $api } = useNuxtApp()
   const toast = useToast()
 
@@ -12,15 +11,15 @@ export function useCredentials(projectCode?: MaybeRefOrGetter<string | null | un
   const query = ref('')
   const params = computed(() => ({ page: page.value, limit: limit.value, query: query.value }))
 
-  const { data, status, refresh } = useApi<PaginatedList<Credential>>('/credentials', {
+  const { data, status, refresh } = useApi<PaginatedResponse<CredentialSchema>>('/credentials', {
     query: computed(() => ({
       ...params.value,
-      project_code: toValue(projectCode)
+      project_id: toValue(projectId)
     }))
   })
 
-  const total = computed(() => data.value?.total || 0)
-  const items = computed(() => data.value?.items || [])
+  const total = computed(() => data.value?.meta.total || 0)
+  const items = computed(() => data.value?.data || [])
   const offset = computed(() => (page.value - 1) * limit.value)
 
   async function search() {
@@ -29,10 +28,10 @@ export function useCredentials(projectCode?: MaybeRefOrGetter<string | null | un
     await refresh()
   }
 
-  async function remove(code: string) {
+  async function remove(id: string) {
     if (!confirm('Are you sure you want to delete this credential?')) return
     try {
-      await $api(`/credentials/${code}`, { method: 'DELETE' })
+      await $api(`/credentials/${id}`, { method: 'DELETE' })
       await refresh()
       toast.add({
         title: 'Credential deleted',

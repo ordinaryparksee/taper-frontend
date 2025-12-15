@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import type { Connection } from '#shared/types'
-
 const props = withDefaults(defineProps<{
   multiple?: boolean
-  projectCode?: string | null
+  projectId?: string | null
   buttonLabel?: string
   disabled?: boolean
   drivers?: string[]
@@ -30,7 +28,7 @@ if (props.multiple) {
 }
 
 const isOpen = ref(false)
-const selectedItems = ref<Connection[] | null>(null)
+const selectedItems = ref<ConnectionSchema[] | null>(null)
 
 function open() {
   if (props.disabled) return
@@ -97,7 +95,7 @@ function confirm() {
             :selected="selected"
             :selectable="true"
             :multiple="props.multiple"
-            :project-code="props.projectCode"
+            :project-id="props.projectId"
             :drivers="props.drivers"
             @update:selected="(value) => {
               selected = value

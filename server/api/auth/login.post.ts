@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
       user: {
         email: email
       },
-      token: data.access_token
+      token: data.data.access_token
     })
   }
 

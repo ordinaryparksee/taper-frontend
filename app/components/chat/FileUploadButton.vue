@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { FILE_UPLOAD_CONFIG, MODALITY_MIME_TYPES } from '#shared/utils/file'
-
 const props = defineProps<{
   modalities: string[]
 }>()

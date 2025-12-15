@@ -1,7 +1,6 @@
 <script setup lang="tsx">
 import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
 import { UButton, UCheckbox, UDropdownMenu } from '#components'
-import type { Project } from '#shared/types'
 import type { Row } from '@tanstack/table-core'
 
 const props = withDefaults(defineProps<{
@@ -39,37 +38,37 @@ const {
 
 const limitItems = ref([5, 10, 20])
 
-function isSelected(code: string) {
-  const index = selected.value.indexOf(code)
+function isSelected(id: string) {
+  const index = selected.value.indexOf(id)
   return index > -1
 }
 
-function toggle(code: string) {
-  const index = selected.value.indexOf(code)
+function toggle(id: string) {
+  const index = selected.value.indexOf(id)
   if (index > -1) {
     const newValue = [...selected.value]
     newValue.splice(index, 1)
     selected.value = [...newValue]
   } else {
     if (props.multiple) {
-      selected.value = [...selected.value, code]
+      selected.value = [...selected.value, id]
     } else {
-      selected.value = [code]
+      selected.value = [id]
     }
   }
 }
 
-function getRowItems(row: Row<Project>): DropdownMenuItem[] {
+function getRowItems(row: Row<ProjectSchema>): DropdownMenuItem[] {
   return [
     { type: 'label', label: 'Actions' },
     {
-      label: 'Copy project code',
+      label: 'Copy project id',
       icon: 'i-lucide-copy',
       onSelect() {
-        navigator.clipboard.writeText(row.original.code.toString())
+        navigator.clipboard.writeText(row.original.id.toString())
         toast.add({
           title: 'Copied to clipboard',
-          description: 'Project code copied to clipboard'
+          description: 'Project id copied to clipboard'
         })
       }
     },
@@ -77,7 +76,7 @@ function getRowItems(row: Row<Project>): DropdownMenuItem[] {
     {
       label: 'View project details',
       icon: 'i-lucide-list',
-      to: `/projects/${row.original.code}`
+      to: `/projects/${row.original.id}`
     },
     { type: 'separator' },
     {
@@ -85,15 +84,15 @@ function getRowItems(row: Row<Project>): DropdownMenuItem[] {
       icon: 'i-lucide-trash',
       color: 'error',
       async onSelect() {
-        await remove(row.original.code)
+        await remove(row.original.id)
       }
     }
   ]
 }
 
-function onSelectClick(e: MouseEvent, code: string) {
+function onSelectClick(e: MouseEvent, id: string) {
   e.stopPropagation()
-  toggle(code)
+  toggle(id)
   if (props.multiple) {
     model.value = selected.value
   } else {
@@ -101,26 +100,26 @@ function onSelectClick(e: MouseEvent, code: string) {
   }
 }
 
-function getRowAttrs(row: Project) {
+function getRowAttrs(row: ProjectSchema) {
   return {
     class: [
       'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
-      props.selectable && selected.value?.includes(row.code) ? 'bg-gray-50/60 dark:bg-gray-800/60' : ''
+      props.selectable && selected.value?.includes(row.id) ? 'bg-gray-50/60 dark:bg-gray-800/60' : ''
     ].join(' '),
-    onClick: () => toggle(row.code)
+    onClick: () => toggle(row.id)
   }
 }
 
-const columns = computed<TableColumn<Project>[]>(() => {
-  const cols: TableColumn<Project>[] = []
+const columns = computed<TableColumn<ProjectSchema>[]>(() => {
+  const cols: TableColumn<ProjectSchema>[] = []
 
   if (props.selectable && props.multiple) {
     cols.push({
       id: 'select',
       header: () => {
         const pageItems = items.value
-        const pageCodes = pageItems.map(i => i.code)
-        const pageSelected = pageCodes.filter(code => selected.value.includes(code))
+        const pageIds = pageItems.map(i => i.id)
+        const pageSelected = pageIds.filter(id => selected.value.includes(id))
         const allSelected = pageItems.length > 0 && pageSelected.length === pageItems.length
         const someSelected = pageSelected.length > 0 && !allSelected
         return (
@@ -130,10 +129,10 @@ const columns = computed<TableColumn<Project>[]>(() => {
             onUpdate:modelValue={(value: boolean | 'indeterminate') => {
               const shouldSelect = !!value
               if (shouldSelect) {
-                const merged = new Set([...selected.value, ...pageCodes])
+                const merged = new Set([...selected.value, ...pageIds])
                 selected.value = Array.from(merged)
               } else {
-                selected.value = selected.value.filter(code => !pageCodes.includes(code))
+                selected.value = selected.value.filter(id => !pageIds.includes(id))
               }
               model.value = selected.value
             }}
@@ -141,16 +140,16 @@ const columns = computed<TableColumn<Project>[]>(() => {
         )
       },
       cell: ({ row }) => {
-        const code = row.original.code
+        const id = row.original.id
         return (
           <UCheckbox
-            modelValue={isSelected(code)}
+            modelValue={isSelected(id)}
             aria-label="Select row"
             onUpdate:modelValue={(value: boolean | 'indeterminate') => {
               if (value) {
-                if (!selected.value.includes(code)) selected.value = [...selected.value, code]
+                if (!selected.value.includes(id)) selected.value = [...selected.value, id]
               } else {
-                selected.value = selected.value.filter(c => c !== code)
+                selected.value = selected.value.filter(c => c !== id)
               }
               model.value = selected.value
             }}
@@ -180,7 +179,7 @@ const columns = computed<TableColumn<Project>[]>(() => {
         <div class="flex items-center gap-2">
           <div>
             <p class="font-medium text-highlighted">{row.original.name}</p>
-            <p>{row.original.code}</p>
+            <p>{row.original.id}</p>
           </div>
         </div>
       ),
@@ -201,7 +200,7 @@ const columns = computed<TableColumn<Project>[]>(() => {
       header: () => {},
       cell: ({ row }) => (
         <div class="text-right px-1" onClick={(e: MouseEvent) => e.stopPropagation()}>
-          <UDropdownMenu items={getRowItems(row as unknown as Row<Project>)} content={{ align: 'end' }}>
+          <UDropdownMenu items={getRowItems(row as unknown as Row<ProjectSchema>)} content={{ align: 'end' }}>
             <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" class="ml-auto" size="xs" />
           </UDropdownMenu>
         </div>
@@ -215,15 +214,15 @@ const columns = computed<TableColumn<Project>[]>(() => {
       id: 'actions',
       header: () => {},
       cell: ({ row }) => {
-        const code = row.original.code
-        const _isSelected = isSelected(code)
+        const id = row.original.id
+        const _isSelected = isSelected(id)
         return (
           <div class="text-right px-1">
             <UButton
               size="xs"
               color={_isSelected ? 'primary' : 'neutral'}
               variant={_isSelected ? 'solid' : 'outline'}
-              onClick={(e: MouseEvent) => onSelectClick(e, code)}
+              onClick={(e: MouseEvent) => onSelectClick(e, id)}
             >
               {_isSelected ? 'Selected' : 'Select'}
             </UButton>

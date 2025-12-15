@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { SelectMenuItem } from '#ui/types'
+import type { SelectMenuItem } from '@nuxt/ui'
 
 const { model, models, formatModelName, detectIcon, detectAvatar } = useModels('chat')
 

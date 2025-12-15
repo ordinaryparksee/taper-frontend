@@ -1,17 +1,23 @@
 import type { UIMessagePart, UIDataTypes, UITools, FileUIPart } from 'ai'
-import type { File } from './file'
-import type { Knowledge, KnowledgeRetrievedItem } from './knowledge'
+import type { FileType } from '#shared/types/file'
+import type { KnowledgeType, KnowledgeRetrievedItemType } from '#shared/types/knowledge'
 
 export type ChatRole = 'system' | 'user' | 'assistant'
 export type ChatStatus = 'PENDING' | 'COMPLETED' | 'FAILED'
-export type MessageMetadata = { id: string, status: ChatStatus, knowledge?: Record<string, unknown>, [key: string]: any }
-
-export interface Chat {
+export type MessageMetadata = {
   id: string
-  project_code: string
-  conversation_code: number
-  user_code: number
-  credential_code: string | null
+  status: ChatStatus
+  knowledge?: Record<string, unknown>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any
+}
+
+export interface ChatSchema {
+  id: string
+  project_id: string
+  conversation_id: string
+  user_id: string
+  credential_id: string | null
   stream_id: string
   model: string
   options: {
@@ -30,10 +36,10 @@ export interface Chat {
   total_tokens: number | null
   status: ChatStatus
   metadata?: {
-    knowledge_retrieved?: KnowledgeRetrievedItem[]
+    knowledge_retrieved?: KnowledgeRetrievedItemType[]
   }
-  files: File[]
-  knowledges: Knowledge[]
+  files: FileType[]
+  knowledges: KnowledgeType[]
   created_at: Date
   updated_at: Date
 

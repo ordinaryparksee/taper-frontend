@@ -1,8 +1,7 @@
-import type { Connection } from '#shared/types'
 import type { FetchError } from 'ofetch'
 
 interface UseConnectionsOptions {
-  projectCode?: MaybeRefOrGetter<string | null | undefined>
+  projectId?: MaybeRefOrGetter<string | null | undefined>
   drivers?: MaybeRefOrGetter<string[]>
 }
 
@@ -22,15 +21,15 @@ export function useConnections(options: UseConnectionsOptions = {}) {
     driver: toValue(options.drivers)
   }))
 
-  const { data, status, refresh } = useApi<PaginatedList<Connection>>('/connections', {
+  const { data, status, refresh } = useApi<PaginatedResponse<ConnectionSchema>>('/connections', {
     query: computed(() => ({
       ...params.value,
-      project_code: toValue(options.projectCode)
+      project_id: toValue(options.projectId)
     }))
   })
 
-  const total = computed(() => data.value?.total || 0)
-  const items = computed(() => data.value?.items || [])
+  const total = computed(() => data.value?.meta.total || 0)
+  const items = computed(() => data.value?.data || [])
   const offset = computed(() => (page.value - 1) * limit.value)
 
   async function search() {
@@ -39,10 +38,10 @@ export function useConnections(options: UseConnectionsOptions = {}) {
     await refresh()
   }
 
-  async function remove(code: string) {
+  async function remove(id: string) {
     if (!confirm('Are you sure you want to delete this connection?')) return
     try {
-      await $api(`/connections/${code}`, { method: 'DELETE' })
+      await $api(`/connections/${id}`, { method: 'DELETE' })
       await refresh()
       toast.add({
         title: 'Connection deleted',

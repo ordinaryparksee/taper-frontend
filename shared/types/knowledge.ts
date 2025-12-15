@@ -1,65 +1,76 @@
+import { z } from 'zod'
+
 export type KnowledgeSplitMode = 'PAGE_BASE' | 'CONTEXT_BASE' | null
 
-export interface Knowledge {
-  id: number
-  project_code: string
-  connection_code: string | null
-  embedding_model_credential_code: string | null
-  code: string
-  name: string
-  embedding_model: string
-  embedding_dimension: number
-  chunk_strategy: 'CHAR_SPLIT' | 'RECURSIVE_CHAR_SPLIT'
-  chunk_size: number
-  chunk_overlap: number
-  language: string | null
-  split_mode: KnowledgeSplitMode
-  created_at: Date
-  updated_at: Date
-}
+const Knowledge = z.object({
+  id: z.string(),
+  project_id: z.string(),
+  connection_id: z.string().nullable(),
+  embedding_model_credential_id: z.string().nullable(),
+  name: z.string(),
+  embedding_model: z.string(),
+  embedding_dimension: z.number(),
+  chunk_strategy: z.enum(['CHAR_SPLIT', 'RECURSIVE_CHAR_SPLIT']),
+  chunk_size: z.number(),
+  chunk_overlap: z.number(),
+  language: z.string().nullable(),
+  split_mode: z.enum(['PAGE_BASE', 'CONTEXT_BASE']).nullable(),
+  created_at: z.string(),
+  updated_at: z.string()
+}).register(z.globalRegistry, {
+  id: 'Knowledge'
+})
+export type KnowledgeType = z.infer<typeof Knowledge>
+export const KnowledgeSchema = Knowledge.toJSONSchema()
 
 export type KnowledgeFileStatus = 'SCHEDULED' | 'STARTED' | 'LOADING'
   | 'CHUNKING' | 'CHUNKING_FAILED'
   | 'EMBEDDING' | 'EMBEDDING_FAILED'
   | 'COMPLETED' | 'FAILED'
 
-export interface KnowledgeFile {
-  knowledge_code: string
-  file_id: string
-  file_name: string
-  file_size: number
-  file_type: string
-  flow_run_id: string | null
-  sha256_hash: string | null
-  split_mode: KnowledgeSplitMode
-  status: KnowledgeFileStatus
-  started_at: Date | null
-  chunk_total: number | null
-  chunk_completed: number | null
-  chunk_failed: number | null
-  embedding_completed: number | null
-  embedding_failed: number | null
-  transfer_completed: number | null
-  transfer_failed: number | null
-  chunk_started_at: Date | null
-  chunk_completed_at: Date | null
-  embedding_started_at: Date | null
-  embedding_completed_at: Date | null
-  completed_at: Date | null
-  failed_at: Date | null
-  error_message: string | null
-}
+const KnowledgeFile = z.object({
+  knowledge_id: z.string(),
+  file_id: z.string(),
+  file_name: z.string(),
+  file_size: z.number(),
+  file_type: z.string(),
+  flow_run_id: z.string().nullable(),
+  sha256_hash: z.string().nullable(),
+  split_mode: z.enum(['PAGE_BASE', 'CONTEXT_BASE']).nullable(),
+  status: z.enum(['SCHEDULED', 'STARTED', 'LOADING', 'CHUNKING', 'CHUNKING_FAILED', 'EMBEDDING', 'EMBEDDING_FAILED', 'COMPLETED', 'FAILED']),
+  started_at: z.string().nullable(),
+  chunk_total: z.number().nullable(),
+  chunk_completed: z.number().nullable(),
+  chunk_failed: z.number().nullable(),
+  embedding_completed: z.number().nullable(),
+  embedding_failed: z.number().nullable(),
+  transfer_completed: z.number().nullable(),
+  transfer_failed: z.number().nullable(),
+  chunk_started_at: z.string().nullable(),
+  chunk_completed_at: z.string().nullable(),
+  embedding_started_at: z.string().nullable(),
+  embedding_completed_at: z.string().nullable(),
+  completed_at: z.string().nullable(),
+  failed_at: z.string().nullable(),
+  error_message: z.string().nullable()
+}).register(z.globalRegistry, {
+  id: 'KnowledgeFile'
+})
 
-export interface KnowledgeRetrievedItem {
-  project_code: string
-  knowledge_code: string
-  file_id: string
-  chunk_content: string
-  chunk_number: number
-  embedding_model: string
-  metadata?: {
-    file_name?: string
-    [key: string]: unknown
-  }
-  score: number
-}
+export type KnowledgeFileType = z.infer<typeof KnowledgeFile>
+export const KnowledgeFileSchema = KnowledgeFile.toJSONSchema()
+
+const KnowledgeRetrievedItem = z.object({
+  project_id: z.string(),
+  knowledge_id: z.string(),
+  file_id: z.string(),
+  chunk_content: z.string(),
+  chunk_number: z.number(),
+  embedding_model: z.string(),
+  metadata: z.record(z.string(), z.unknown()).nullable(),
+  score: z.number()
+}).register(z.globalRegistry, {
+  id: 'KnowledgeRetrievedItem'
+})
+export type KnowledgeRetrievedItemType = z.infer<typeof KnowledgeRetrievedItem>
+export const KnowledgeRetrievedItemSchema = KnowledgeRetrievedItem.toJSONSchema()

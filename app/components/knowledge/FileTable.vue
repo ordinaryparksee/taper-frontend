@@ -5,7 +5,7 @@ import { UAvatar, UBadge, UButton, UDropdownMenu } from '#components'
 import { filesize } from 'filesize'
 
 const props = defineProps<{
-  knowledgeCode: string
+  knowledgeId: string
 }>()
 
 const toast = useToast()
@@ -24,9 +24,9 @@ const {
   getStatusVariant,
   getStatusColor,
   watcherId
-} = useKnowledgeFiles(props.knowledgeCode)
+} = useKnowledgeFiles(props.knowledgeId)
 
-function getRowItems(row: Row<KnowledgeFile>): DropdownMenuItem[] {
+function getRowItems(row: Row<KnowledgeFileType>): DropdownMenuItem[] {
   return [
     {
       type: 'label',
@@ -37,7 +37,7 @@ function getRowItems(row: Row<KnowledgeFile>): DropdownMenuItem[] {
       icon: 'i-lucide-refresh-ccw',
       async onSelect() {
         if (!confirm('Are you sure you want to reset state?')) return
-        await $api(`/knowledges/${props.knowledgeCode}/pipeline/reset`, {
+        await $api(`/knowledges/${props.knowledgeId}/pipeline/reset`, {
           method: 'POST',
           body: {
             file_ids: [row.original.file_id]
@@ -54,7 +54,7 @@ function getRowItems(row: Row<KnowledgeFile>): DropdownMenuItem[] {
       color: 'error',
       async onSelect() {
         if (!confirm('Are you sure you want to delete this file?')) return
-        await $api(`/knowledges/${props.knowledgeCode}/files`, {
+        await $api(`/knowledges/${props.knowledgeId}/files`, {
           method: 'DELETE',
           body: {
             file_ids: [row.original.file_id]
@@ -71,7 +71,7 @@ function getRowItems(row: Row<KnowledgeFile>): DropdownMenuItem[] {
   ]
 }
 
-const fileColumns: TableColumn<KnowledgeFile>[] = [
+const fileColumns: TableColumn<KnowledgeFileType>[] = [
   {
     accessorKey: 'name',
     header: 'Name',
@@ -120,7 +120,7 @@ const fileColumns: TableColumn<KnowledgeFile>[] = [
     id: 'menu',
     cell: ({ row }) => (
       <div class="text-right px-1" onClick={(e: MouseEvent) => e.stopPropagation()}>
-        <UDropdownMenu items={getRowItems(row as unknown as Row<KnowledgeFile>)} content={{ align: 'end' }}>
+        <UDropdownMenu items={getRowItems(row as unknown as Row<KnowledgeFileType>)} content={{ align: 'end' }}>
           <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" class="ml-auto" size="xs" />
         </UDropdownMenu>
       </div>

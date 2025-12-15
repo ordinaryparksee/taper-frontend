@@ -9,16 +9,16 @@ const { project } = useProject()
 </script>
 
 <template>
-  <UDashboardPanel id="credentials">
+  <UDashboardPanel id="agents">
     <template #header>
-      <UDashboardNavbar title="Credentials" :ui="{ right: 'gap-3' }">
+      <UDashboardNavbar title="Agents" :ui="{ right: 'gap-3' }">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
 
         <template #right>
           <UButton
-            to="/credentials/@new"
+            to="/agents/@new"
             icon="i-lucide-plus"
             size="md"
             class="rounded-full"
@@ -28,7 +28,10 @@ const { project } = useProject()
     </template>
 
     <template #body>
-      <CredentialList v-if="project" :project-id="project.id" control />
+      <!-- AgentList 컴포넌트가 아직 생성되지 않았을 수 있으므로 주석 처리하거나 텍스트로 대체 -->
+      <div v-if="project" class="p-4">
+        Agent List will be here.
+      </div>
     </template>
   </UDashboardPanel>
 </template>

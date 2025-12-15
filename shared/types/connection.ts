@@ -1,11 +1,12 @@
-export interface Connection {
+export type ConnectionDriver = 'OPENSEARCH' | 'PGVECTOR' | 'POSTGRESQL' | 'SSH' | 'MYSQL' | 'PROXY'
+
+export interface ConnectionSchema {
   id: string
-  credential_code: string | null
-  ssh_tunnel_connection_code: string | null
-  proxy_connection_code: string | null
-  code: string
+  credential_id: string | null
+  ssh_tunnel_connection_id: string | null
+  proxy_connection_id: string | null
   name: string
-  driver: 'OPENSEARCH' | 'PGVECTOR' | 'POSTGRESQL' | 'SSH' | 'MYSQL' | 'PROXY'
+  driver: ConnectionDriver
   uri: string
   created_at: Date
   updated_at: Date

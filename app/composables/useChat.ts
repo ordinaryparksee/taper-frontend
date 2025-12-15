@@ -3,7 +3,7 @@ import type { FileWithStatus } from '#shared/utils/file'
 import { FILE_UPLOAD_CONFIG } from '#shared/utils/file'
 import { useEventSource } from '@vueuse/core'
 
-export function useChat(conversationCode?: string | null) {
+export function useChat(conversationId?: string | null) {
   const config = useRuntimeConfig()
   const { $api } = useNuxtApp()
   const { project } = useProject()
@@ -11,15 +11,15 @@ export function useChat(conversationCode?: string | null) {
   const { model } = useModels('chat')
   const toast = useToast()
 
-  const _conversationCode = ref(conversationCode)
+  const _conversationId = ref(conversationId)
   const messages = ref<UIMessage<MessageMetadata>[]>([])
   const prompt = ref('')
   const loading = ref(false)
   const streaming = ref(false)
   const streamingMode = ref(true)
   const statefulMode = ref(true)
-  const credentialCode = ref<string | null>(null)
-  const knowledgeCodes = ref<string[]>([])
+  const credentialId = ref<string | null>(null)
+  const knowledgeIds = ref<string[]>([])
   const temperature = ref(0.7)
   const topP = ref(1.0)
   const windowSize = ref(20)
@@ -35,18 +35,20 @@ export function useChat(conversationCode?: string | null) {
     return streaming.value ? 'streaming' : loading.value ? 'submitted' : 'ready'
   })
 
-  if (_conversationCode.value) {
-    const { data, execute } = useApi<Chat[]>(`/conversations/${_conversationCode.value}/messages`, {
+  console.log(session)
+
+  if (_conversationId.value) {
+    const { data, execute } = useApi<PaginatedResponse<ChatSchema>>(`/conversations/${_conversationId.value}/messages`, {
       params: {
-        project_code: project.value?.code,
-        conversation_code: _conversationCode.value
+        project_id: project.value?.id,
+        conversation_id: _conversationId.value
       },
       immediate: false
     })
     execute().then(async () => {
-      const chats = data.value
-      credentialCode.value = chats[chats.length - 1]?.credential_code || null
-      knowledgeCodes.value = chats[chats.length - 1]?.knowledges.map(knowledge => knowledge.code) || []
+      const chats = data.value?.data
+      credentialId.value = chats[chats.length - 1]?.credential_id || null
+      knowledgeIds.value = chats[chats.length - 1]?.knowledges.map((knowledge: KnowledgeType) => knowledge.id) || []
 
       messages.value = []
       for (const chat of chats) {
@@ -55,7 +57,7 @@ export function useChat(conversationCode?: string | null) {
         lastChatId.value = chat.id
       }
 
-      const lastChat = data.value[data.value.length - 1]
+      const lastChat = data.value?.data[data.value.data.length - 1]
       if (lastChat?.status === 'FAILED') {
         error.value = new Error('Chat failed')
       }
@@ -66,18 +68,18 @@ export function useChat(conversationCode?: string | null) {
     })
   }
 
-  async function newConversation(): Promise<Conversation> {
-    const response = await $api<Conversation>(`/conversations`, {
+  async function newConversation(): Promise<ConversationSchema> {
+    const response = await $api<BaseResponse<ConversationSchema>>(`/conversations`, {
       method: 'POST',
       params: {
-        project_code: project.value?.code
+        project_id: project.value?.id
       }
     })
-    _conversationCode.value = response.code
-    return response
+    _conversationId.value = response.data.id
+    return response.data
   }
 
-  function convertChatToUserMessage(chat: Chat): UIMessage<MessageMetadata> {
+  function convertChatToUserMessage(chat: ChatSchema): UIMessage<MessageMetadata> {
     const parts: UIMessagePart<UIDataTypes, UITools>[] = []
 
     parts.push({
@@ -107,7 +109,7 @@ export function useChat(conversationCode?: string | null) {
     return userMessage
   }
 
-  function convertChatToAssistantMessage(chat: Chat): UIMessage<MessageMetadata> {
+  function convertChatToAssistantMessage(chat: ChatSchema): UIMessage<MessageMetadata> {
     const parts: UIMessagePart<UIDataTypes, UITools>[] = []
 
     parts.push({
@@ -184,22 +186,29 @@ export function useChat(conversationCode?: string | null) {
     part.text = text
   }
 
-  function setKnowledgePart(message: UIMessage<MessageMetadata>, knowledges: KnowledgeRetrievedItem[]) {
+  function setKnowledgePart(message: UIMessage<MessageMetadata>, knowledges: KnowledgeRetrievedItemType[]) {
     if (!knowledges) return
 
-    let part = message.parts.find(part => part.type === 'data-knowledge')
-    if (!part) {
+    let part
+
+    for (const _part of message.parts) {
+      if (_part.type === 'data-knowledge') {
+        part = _part
+      }
+    }
+
+    if (part) {
+      part.data = knowledges
+    } else {
       part = {
-        type: 'data-knowledge',
-        data: []
+        type: 'data-knowledge' as const,
+        data: knowledges
       }
       message.parts.push(part)
     }
-
-    part.data = knowledges
   }
 
-  async function handleChat(handler: () => Promise<Chat>, chatId?: string | null) {
+  async function handleChat(handler: () => Promise<ChatSchema>, chatId?: string | null) {
     error.value = undefined
     loading.value = true
 
@@ -237,24 +246,24 @@ export function useChat(conversationCode?: string | null) {
     }
   }
 
-  async function prepareCompletion(message: string, fileIds: string[] = []): Promise<Chat> {
+  async function prepareCompletion(message: string, fileIds: string[] = []): Promise<ChatSchema> {
     if (message.length < 1) {
       throw new Error('Prompt is required')
     }
 
-    const chat = await $api<Chat>(`/chat`, {
+    const chat = await $api<BaseResponse<ChatSchema>>(`/chat`, {
       method: 'POST',
       params: {
-        project_code: project.value?.code,
-        conversation_code: _conversationCode.value
+        project_id: project.value?.id,
+        conversation_id: _conversationId.value
       },
       body: {
         model: model.value || 'openrouter/x-ai/grok-4.1-fast',
-        credential_code: credentialCode.value,
+        credential_id: credentialId.value,
         message: {
           content: message,
           file_ids: fileIds,
-          knowledge_codes: knowledgeCodes.value
+          knowledge_ids: knowledgeIds.value
         },
         stateful: statefulMode.value,
         streaming: streamingMode.value,
@@ -267,18 +276,18 @@ export function useChat(conversationCode?: string | null) {
       signal: abortController.value?.signal
     })
 
-    const userMessage: UIMessage<MessageMetadata> = convertChatToUserMessage(chat)
+    const userMessage: UIMessage<MessageMetadata> = convertChatToUserMessage(chat.data)
     messages.value.push(userMessage)
 
-    return chat
+    return chat.data
   }
 
   async function prepareRegenerate(chatId: string) {
-    const chat = await $api<Chat>(`/chat/${chatId}`, {
+    const chat = await $api<BaseResponse<ChatSchema>>(`/chat/${chatId}`, {
       method: 'PUT',
       params: {
-        project_code: project.value?.code,
-        conversation_code: _conversationCode.value
+        project_id: project.value?.id,
+        conversation_id: _conversationId.value
       },
       body: {
         stateful: statefulMode.value,
@@ -287,10 +296,10 @@ export function useChat(conversationCode?: string | null) {
       signal: abortController.value?.signal
     })
 
-    return chat
+    return chat.data
   }
 
-  async function stream(chat: Chat) {
+  async function stream(chat: ChatSchema) {
     if (!chat.stream_id) return
 
     streamId.value = chat.stream_id
@@ -299,7 +308,7 @@ export function useChat(conversationCode?: string | null) {
     let assistantMessage: UIMessage<MessageMetadata> | null = getAssistantMessage(chat.id)
 
     return new Promise((resolve, reject) => {
-      const { eventSource, close } = useEventSource(`${config.public.apiBase}/chat/stream/${streamId.value}?project_code=${project.value?.code}&conversation_code=${_conversationCode.value}`)
+      const { eventSource, close } = useEventSource(`${config.public.apiBase}/chat/stream/${streamId.value}?project_id=${project.value?.id}&conversation_id=${_conversationId.value}`)
       eventSource.value?.addEventListener('message', async (event) => {
         if (!streaming.value) {
           streaming.value = true
@@ -330,7 +339,7 @@ export function useChat(conversationCode?: string | null) {
           setKnowledgePart(assistantMessage, chat.metadata?.knowledge_retrieved || [])
         }
       })
-      eventSource.value?.addEventListener('error', async (event: Event) => {
+      eventSource.value?.addEventListener('error', async (event: Event & { data: string }) => {
         if (event.data) {
           const error = JSON.parse(event.data)
           reject(new ChatError(error.message, error.code))
@@ -339,6 +348,7 @@ export function useChat(conversationCode?: string | null) {
         }
       })
       eventSource.value?.addEventListener('close', async (event) => {
+        console.log(event)
         close()
         streaming.value = false
         streamId.value = null
@@ -354,7 +364,7 @@ export function useChat(conversationCode?: string | null) {
   async function send() {
     if ((!prompt.value.trim() && uploadedFiles.value.length === 0) || loading.value) return
 
-    if (!_conversationCode.value) {
+    if (!_conversationId.value) {
       await newConversation()
     }
 
@@ -404,8 +414,8 @@ export function useChat(conversationCode?: string | null) {
         await $api(`/chat/stream/${streamId.value}`, {
           method: 'DELETE',
           params: {
-            project_code: project.value?.code,
-            conversation_code: _conversationCode.value
+            project_id: project.value?.id,
+            conversation_id: _conversationId.value
           }
         })
         // const lastUserMessage = messages.value.findLast(m => m.role === 'user')
@@ -436,7 +446,7 @@ export function useChat(conversationCode?: string | null) {
       const { upload, uploadId } = useTus({
         endpoint: `${config.public.apiBase}/tus/upload`,
         metadata: {
-          namespace: `chat.${_conversationCode.value}`,
+          namespace: `chat.${_conversationId.value}`,
           filename: fileWithStatus.file.name,
           filetype: fileWithStatus.file.type
         },
@@ -513,15 +523,15 @@ export function useChat(conversationCode?: string | null) {
   )
 
   return {
-    conversationCode: _conversationCode,
+    conversationId: _conversationId,
     messages,
     prompt,
     loading,
     streaming,
     streamingMode,
     statefulMode,
-    credentialCode,
-    knowledgeCodes,
+    credentialId: credentialId,
+    knowledgeIds: knowledgeIds,
     temperature,
     topP,
     windowSize,

@@ -7,19 +7,19 @@ const app = useAppConfig()
 const route = useRoute()
 const { project } = useProject()
 
-const conversationCode = ref(route.params.conversation_code)
-const isNew = computed(() => conversationCode.value === '@new')
+const conversationId = ref(route.params.conversation_id)
+const isNew = computed(() => conversationId.value === '@new')
 
-const { data, execute } = useApi<Conversation>(() => `/conversations/${conversationCode.value}`, {
+const { data, execute } = useApi<BaseResponse<ConversationSchema>>(() => `/conversations/${conversationId.value}`, {
   params: {
-    project_code: project.value?.code
+    project_id: project.value?.id
   },
   immediate: false
 })
 
-const { data: conversations, refresh: refreshConversations } = useApi<PaginatedList<Conversation>>(`/conversations`, {
+const { data: conversations, refresh: refreshConversations } = useApi<PaginatedList<ConversationSchema>>(`/conversations`, {
   params: {
-    project_code: project.value?.code
+    project_id: project.value?.id
   }
 })
 
@@ -29,17 +29,17 @@ if (!isNew.value) {
 
 const items = computed(() => [
   { label: 'Conversations', icon: app.ui.icons.knowledge, to: '/conversations' },
-  { label: data.value?.subject || 'New' }
+  { label: data.value?.data.subject || 'New' }
 ])
 
-async function handleNewConversation(code: string) {
-  conversationCode.value = code
-  route.params.conversation_code = code
+async function handleNewConversation(id: string) {
+  conversationId.value = id
+  route.params.conversation_id = id
   await execute()
-  window.history.replaceState({}, '', `/conversations/${conversationCode.value}`)
+  window.history.replaceState({}, '', `/conversations/${conversationId.value}`)
 }
 
-async function handleChatComplete(_chat: Chat) {
+async function handleChatComplete(_chat: ChatSchema) {
   await execute()
 }
 </script>
@@ -76,7 +76,7 @@ async function handleChatComplete(_chat: Chat) {
                   },
                   ...conversations.items?.map(conversation => ({
                     label: conversation.subject,
-                    to: `/conversations/${conversation.code}`
+                    to: `/conversations/${conversation.id}`
                   }))
                 ]"
                 orientation="vertical"
@@ -94,8 +94,8 @@ async function handleChatComplete(_chat: Chat) {
     <template #body>
       <ChatContainer
         v-if="project"
-        :project-code="project.code"
-        :conversation-code="data?.code"
+        :project-id="project.id"
+        :conversation-id="data?.data.id"
         @on-new-conversation="handleNewConversation"
         @on-chat-complete="handleChatComplete"
       />

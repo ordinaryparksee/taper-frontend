@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import type { Knowledge } from '#shared/types'
-
 const props = withDefaults(defineProps<{
   multiple?: boolean
-  projectCode?: string | null
+  projectId?: string | null
   buttonLabel?: string
   disabled?: boolean
 }>(), {
@@ -28,7 +26,7 @@ if (props.multiple) {
 }
 
 const isOpen = ref(false)
-const selectedItems = ref<Knowledge[] | null>(null)
+const selectedItems = ref<KnowledgeType[] | null>(null)
 
 function open() {
   if (props.disabled) return
@@ -95,7 +93,7 @@ function confirm() {
             :selected="selected"
             :selectable="true"
             :multiple="props.multiple"
-            :project-code="props.projectCode"
+            :project-id="props.projectId"
             @update:selected="(value) => {
               selected = value
               if (!props.multiple) confirm()

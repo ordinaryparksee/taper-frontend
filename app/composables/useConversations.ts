@@ -1,7 +1,6 @@
-import type { Conversation } from '#shared/types'
 import type { FetchError } from 'ofetch'
 
-export function useConversations(projectCode?: MaybeRefOrGetter<string | null | undefined>) {
+export function useConversations(projectId?: MaybeRefOrGetter<string | null | undefined>) {
   const { $api } = useNuxtApp()
   const toast = useToast()
 
@@ -12,15 +11,15 @@ export function useConversations(projectCode?: MaybeRefOrGetter<string | null | 
   const query = ref('')
   const params = computed(() => ({ page: page.value, limit: limit.value, query: query.value }))
 
-  const { data, status, refresh } = useApi<PaginatedList<Conversation>>('/conversations', {
+  const { data, status, refresh } = useApi<PaginatedResponse<ConversationSchema>>('/conversations', {
     query: computed(() => ({
       ...params.value,
-      project_code: toValue(projectCode)
+      project_id: toValue(projectId)
     }))
   })
 
-  const total = computed(() => data.value?.total || 0)
-  const items = computed(() => data.value?.items || [])
+  const total = computed(() => data.value?.meta.total || 0)
+  const items = computed(() => data.value?.data || [])
   const offset = computed(() => (page.value - 1) * limit.value)
 
   async function search() {
@@ -29,10 +28,10 @@ export function useConversations(projectCode?: MaybeRefOrGetter<string | null | 
     await refresh()
   }
 
-  async function remove(code: string) {
+  async function remove(id: string) {
     if (!confirm('Are you sure you want to delete this conversation?')) return
     try {
-      await $api(`/conversations/${code}`, { method: 'DELETE' })
+      await $api(`/conversations/${id}`, { method: 'DELETE' })
       await refresh()
       toast.add({
         title: 'Success',

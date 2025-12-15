@@ -9,16 +9,16 @@ const { project } = useProject()
 </script>
 
 <template>
-  <UDashboardPanel id="credentials">
+  <UDashboardPanel id="flows">
     <template #header>
-      <UDashboardNavbar title="Credentials" :ui="{ right: 'gap-3' }">
+      <UDashboardNavbar title="Flows" :ui="{ right: 'gap-3' }">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
 
         <template #right>
           <UButton
-            to="/credentials/@new"
+            to="/flows/@new"
             icon="i-lucide-plus"
             size="md"
             class="rounded-full"
@@ -28,7 +28,9 @@ const { project } = useProject()
     </template>
 
     <template #body>
-      <CredentialList v-if="project" :project-id="project.id" control />
+      <div v-if="project" class="p-4">
+        Flow list will be here.
+      </div>
     </template>
   </UDashboardPanel>
 </template>

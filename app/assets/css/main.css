@@ -1,7 +1,6 @@
 @import "tailwindcss" theme(static);
 @import "@nuxt/ui";
-@import '@vue-flow/core/dist/style.css';
-@import '@vue-flow/core/dist/theme-default.css';
+@import './flow.css';
 
 @theme static {
   --font-sans: 'Public Sans', sans-serif;

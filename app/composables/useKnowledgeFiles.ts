@@ -1,12 +1,12 @@
 import type { Color, Variant } from '~/types'
 
-export function useKnowledgeFiles(knowledgeCode: string) {
+export function useKnowledgeFiles(knowledgeId: string) {
   const hasInProgressFiles = ref(false)
   const watcherId = ref<number>()
   const page = ref(1)
   const limit = ref(10)
 
-  const { data, refresh } = useApi<PaginatedList<KnowledgeFile>>(`/knowledges/${knowledgeCode}/files`, {
+  const { data, refresh } = useApi<PaginatedList<KnowledgeFileType>>(`/knowledges/${knowledgeId}/files`, {
     query: {
       page,
       limit

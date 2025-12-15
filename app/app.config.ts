@@ -5,10 +5,14 @@ export default defineAppConfig({
       neutral: 'zinc'
     },
     icons: {
+      upload: 'i-lucide-upload',
+      download: 'i-lucide-download',
+      file: 'i-lucide-file',
       project: 'i-lucide-monitor-cog',
       credential: 'i-lucide-key-round',
       connection: 'i-lucide-plug',
       knowledge: 'i-lucide-book-text',
+      flow: 'i-material-symbols-airwave',
       conversation: 'i-lucide-messages-square',
       agent: 'i-lucide-bot-message-square',
       tool: 'i-lucide-wrench',

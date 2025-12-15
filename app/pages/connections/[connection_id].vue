@@ -1,6 +1,5 @@
 <script setup lang="tsx">
 import type { FormSubmitEvent, SelectItem } from '@nuxt/ui'
-import type { Project, Connection } from '#shared/types'
 import * as z from 'zod'
 
 definePageMeta({
@@ -11,10 +10,10 @@ const app = useAppConfig()
 const { $api } = useNuxtApp()
 const route = useRoute()
 const toast = useToast()
-const project = useState<Project>('project')
-const isNew = computed(() => route.params.connection_code === '@new')
+const { project } = useProject()
+const isNew = computed(() => route.params.connection_id === '@new')
 
-const { data, refresh, execute } = useApi<Connection>(`/connections/${route.params.connection_code}`, {
+const { data, refresh, execute } = useApi<BaseResponse<ConnectionSchema>>(`/connections/${route.params.connection_id}`, {
   immediate: false,
   lazy: true
 })
@@ -23,26 +22,26 @@ if (!isNew.value) {
   await execute()
 }
 const connectionSchema = z.object({
-  credential_code: z.string().nullable(),
-  ssh_tunnel_connection_code: z.string().nullable(),
-  proxy_connection_code: z.string().nullable(),
+  credential_id: z.string().nullable(),
+  ssh_tunnel_connection_id: z.string().nullable(),
+  proxy_connection_id: z.string().nullable(),
   name: z.string().min(2, 'Too short'),
   driver: z.enum(['OPENSEARCH', 'PGVECTOR', 'POSTGRESQL', 'SSH', 'MYSQL', 'PROXY']),
   uri: z.string()
 })
-type ConnectionSchema = z.output<typeof connectionSchema>
+type ConnectionFormSchema = z.output<typeof connectionSchema>
 
 const form = ref<HTMLFormElement>()
 const submitting = ref(false)
 const testing = ref(false)
 
-const connection = reactive<Partial<ConnectionSchema>>({
-  credential_code: data.value?.credential_code ?? null,
-  ssh_tunnel_connection_code: data.value?.ssh_tunnel_connection_code ?? null,
-  proxy_connection_code: data.value?.proxy_connection_code ?? null,
-  name: data.value?.name ?? '',
-  driver: data.value?.driver ?? 'OPENSEARCH',
-  uri: data.value?.uri ?? ''
+const connection = reactive<Partial<ConnectionFormSchema>>({
+  credential_id: data.value?.data.credential_id ?? null,
+  ssh_tunnel_connection_id: data.value?.data.ssh_tunnel_connection_id ?? null,
+  proxy_connection_id: data.value?.data.proxy_connection_id ?? null,
+  name: data.value?.data.name ?? '',
+  driver: data.value?.data.driver ?? 'OPENSEARCH',
+  uri: data.value?.data.uri ?? ''
 })
 
 async function submit() {
@@ -62,7 +61,7 @@ async function onTest() {
 
   try {
     testing.value = true
-    await $api(`/connections/${data.value?.code}/test`, {
+    await $api(`/connections/${data.value?.data.id}/test`, {
       method: 'POST'
     })
 
@@ -85,13 +84,13 @@ async function onTest() {
   }
 }
 
-async function onSubmit(event: FormSubmitEvent<ConnectionSchema>) {
+async function onSubmit(event: FormSubmitEvent<ConnectionFormSchema>) {
   try {
     submitting.value = true
-    await $api<Connection>(data.value ? `/connections/${data.value.code}` : '/connections', {
+    await $api<BaseResponse<ConnectionSchema>>(data.value ? `/connections/${data.value.data.id}` : '/connections', {
       method: data.value ? 'PUT' : 'POST',
       params: {
-        project_code: project.value?.code
+        project_id: project.value?.id
       },
       body: {
         ...event.data
@@ -159,7 +158,7 @@ const driverIcon = computed(() => driverItems.value.find(item => item.value === 
 
 const items = computed(() => [
   { label: 'Connections', icon: app.ui.icons.connection, to: '/connections' },
-  { label: data.value?.name || 'New' }
+  { label: data.value?.data.name || 'New' }
 ])
 </script>
 
@@ -284,31 +283,31 @@ const items = computed(() => [
           </UFormField>
 
           <UFormField
-            name="credential_code"
+            name="credential_id"
             label="Credential"
             description="Select the credential to use for this connection (optional)."
             class="space-y-2 mt-4"
           >
             <CredentialSelector
-              v-model="connection.credential_code"
+              v-model="connection.credential_id"
               :multiple="false"
-              :project-code="project?.code || null"
+              :project-id="project?.id || null"
               :disabled="submitting"
               button-label="Select credential"
             />
           </UFormField>
 
           <UFormField
-            name="ssh_tunnel_connection_code"
+            name="ssh_tunnel_connection_id"
             label="SSH Tunnel Connection"
             description="Select the connection to use for SSH tunneling (optional)."
             class="space-y-2 mt-4"
           >
             <ConnectionSelector
-              v-if="project?.code"
-              v-model="connection.ssh_tunnel_connection_code"
+              v-if="project?.id"
+              v-model="connection.ssh_tunnel_connection_id"
               :multiple="false"
-              :project-code="project.code"
+              :project-id="project.id"
               :drivers="['SSH']"
               :disabled="submitting"
               button-label="Select SSH connection"
@@ -316,16 +315,16 @@ const items = computed(() => [
           </UFormField>
 
           <UFormField
-            name="proxy_connection_code"
+            name="proxy_connection_id"
             label="Proxy Connection"
             description="Select the connection to use as a proxy (optional)."
             class="space-y-2 mt-4"
           >
             <ConnectionSelector
-              v-if="project?.code"
-              v-model="connection.proxy_connection_code"
+              v-if="project?.id"
+              v-model="connection.proxy_connection_id"
               :multiple="false"
-              :project-code="project.code"
+              :project-id="project.id"
               :drivers="['PROXY']"
               :disabled="submitting"
               button-label="Select proxy connection"

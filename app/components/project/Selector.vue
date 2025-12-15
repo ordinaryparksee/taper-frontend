@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { Project } from '#shared/types'
-
 const props = withDefaults(defineProps<{
   multiple?: boolean
   buttonLabel?: string
@@ -25,7 +23,7 @@ if (props.multiple) {
 }
 
 const isOpen = ref(false)
-const selectedItems = ref<Project[] | null>(null)
+const selectedItems = ref<ProjectSchema[] | null>(null)
 
 function open() {
   isOpen.value = true

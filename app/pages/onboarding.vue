@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { Project } from '#shared/types'
 import * as z from 'zod'
 
 definePageMeta({
@@ -18,15 +17,15 @@ if (projects.value.length > 0) {
 const projectSchema = z.object({
   name: z.string().min(2, 'Too short')
 })
-type ProjectSchema = z.output<typeof projectSchema>
+type ProjectFormSchema = z.output<typeof projectSchema>
 
 const form = ref<HTMLFormElement>()
-const state = reactive<Partial<ProjectSchema>>({
+const state = reactive<Partial<ProjectFormSchema>>({
   name: ''
 })
 const loading = ref(false)
 
-const { data, execute } = useApi<Project>(`/projects`, {
+const { data, execute } = useApi<BaseResponse<ProjectSchema>>(`/projects`, {
   method: 'post',
   body: state,
   immediate: false,
@@ -42,10 +41,10 @@ async function onSubmit() {
     // Update shared state so global middleware won’t bounce back to /start
     if (data.value) {
       // Prepend if not already present
-      if (!projects.value.find(p => p.id === data.value.id)) {
-        projects.value = [data.value, ...projects.value]
+      if (!projects.value.find(p => p.id === data.value.data.id)) {
+        projects.value = [data.value.data, ...projects.value]
       }
-      project.value = data.value
+      project.value = data.value.data
     }
 
     toast.add({

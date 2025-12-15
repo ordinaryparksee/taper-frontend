@@ -18,6 +18,10 @@ const links = [
       }
     },
     {
+      label: 'Data',
+      type: 'label'
+    },
+    {
       label: 'Credentials',
       icon: app.ui.icons.credential,
       to: '/credentials',
@@ -42,6 +46,18 @@ const links = [
       }
     },
     {
+      label: 'Flows',
+      icon: app.ui.icons.flow,
+      to: '/flows',
+      onSelect: () => {
+        open.value = false
+      }
+    },
+    {
+      label: 'AI',
+      type: 'label'
+    },
+    {
       label: 'Conversations',
       icon: app.ui.icons.conversation,
       to: '/conversations',
@@ -64,6 +80,10 @@ const links = [
       onSelect: () => {
         open.value = false
       }
+    },
+    {
+      label: 'Sample',
+      type: 'label'
     },
     {
       label: 'Inbox',

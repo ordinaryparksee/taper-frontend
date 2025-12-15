@@ -1,7 +1,6 @@
-import type { Knowledge } from '#shared/types'
 import type { FetchError } from 'ofetch'
 
-export function useKnowledges(projectCode?: MaybeRefOrGetter<string | null | undefined>) {
+export function useKnowledges(projectId?: MaybeRefOrGetter<string | null | undefined>) {
   const { $api } = useNuxtApp()
   const toast = useToast()
 
@@ -12,15 +11,15 @@ export function useKnowledges(projectCode?: MaybeRefOrGetter<string | null | und
   const query = ref('')
   const params = computed(() => ({ page: page.value, limit: limit.value, query: query.value }))
 
-  const { data, status, refresh } = useApi<PaginatedList<Knowledge>>('/knowledges', {
+  const { data, status, refresh } = useApi<PaginatedResponse<KnowledgeType>>('/knowledges', {
     query: computed(() => ({
       ...params.value,
-      project_code: toValue(projectCode)
+      project_id: toValue(projectId)
     }))
   })
 
-  const total = computed(() => data.value?.total || 0)
-  const items = computed(() => data.value?.items || [])
+  const total = computed(() => data.value?.meta.total || 0)
+  const items = computed(() => data.value?.data || [])
   const offset = computed(() => (page.value - 1) * limit.value)
 
   async function search() {
@@ -29,10 +28,10 @@ export function useKnowledges(projectCode?: MaybeRefOrGetter<string | null | und
     await refresh()
   }
 
-  async function remove(code: string) {
+  async function remove(id: string) {
     if (!confirm('Are you sure you want to delete this knowledge?')) return
     try {
-      await $api(`/knowledges/${code}`, { method: 'DELETE' })
+      await $api(`/knowledges/${id}`, { method: 'DELETE' })
       await refresh()
       toast.add({
         title: 'Knowledge deleted',

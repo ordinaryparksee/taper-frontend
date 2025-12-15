@@ -12,9 +12,9 @@ const items = computed<DropdownMenuItem[][]>(() => {
   return [
     projects.value.map(project => ({
       label: project.name,
-      color: project.code === currentProject.value?.code ? 'primary' : undefined,
+      color: project.id === currentProject.value?.id ? 'primary' : undefined,
       onSelect() {
-        setProject(project.code)
+        setProject(project.id)
       }
     })), [
       {

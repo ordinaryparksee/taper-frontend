@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '@nuxt/ui'
-import type { Project } from '#shared/types'
 import * as z from 'zod'
 
 definePageMeta({
@@ -12,9 +11,9 @@ const { $api } = useNuxtApp()
 const route = useRoute()
 const toast = useToast()
 const { refresh: refreshProject } = useProject()
-const isNew = computed(() => route.params.project_code === '@new')
+const isNew = computed(() => route.params.project_id === '@new')
 
-const { data, refresh, execute } = useApi<Project>(`/projects/${route.params.project_code}`, {
+const { data, refresh, execute } = useApi<BaseResponse<ProjectSchema>>(`/projects/${route.params.project_id}`, {
   immediate: false,
   lazy: true
 })
@@ -26,20 +25,20 @@ if (!isNew.value) {
 const projectSchema = z.object({
   name: z.string().min(2, 'Too short')
 })
-type ProjectSchema = z.output<typeof projectSchema>
+type ProjectFormSchema = z.output<typeof projectSchema>
 
 const form = ref<HTMLFormElement>()
 
-const project = reactive<Partial<ProjectSchema>>({
-  name: data.value?.name || ''
+const project = reactive<Partial<ProjectFormSchema>>({
+  name: data.value?.data.name || ''
 })
 
 async function submit() {
   form.value?.submit()
 }
 
-async function onSubmit(event: FormSubmitEvent<ProjectSchema>) {
-  await $api<Project>(data.value ? `/projects/${data.value.code}` : '/projects', {
+async function onSubmit(event: FormSubmitEvent<ProjectFormSchema>) {
+  await $api<ProjectSchema>(data.value ? `/projects/${data.value.data.id}` : '/projects', {
     method: data.value ? 'PUT' : 'POST',
     body: event.data
   })
@@ -66,7 +65,7 @@ const items = computed(() => [
     to: '/projects'
   },
   {
-    label: data.value?.name || 'New'
+    label: data.value?.data.name || 'New'
   }
 ])
 </script>

@@ -1,5 +1,4 @@
 <script setup lang="tsx">
-import type { Credential } from '#shared/types'
 import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
 import { UAvatar, UButton, UCheckbox, UDropdownMenu } from '#components'
 
@@ -7,12 +6,12 @@ const props = withDefaults(defineProps<{
   selectable?: boolean
   multiple?: boolean
   control?: boolean
-  projectCode?: string | null
+  projectId?: string | null
 }>(), {
   selectable: false,
   multiple: false,
   control: false,
-  projectCode: null
+  projectId: null
 })
 
 const app = useAppConfig()
@@ -34,76 +33,76 @@ const {
   refresh,
   search,
   remove
-} = useCredentials(computed(() => props.projectCode || project.value?.code))
+} = useCredentials(computed(() => props.projectId || project.value?.id))
 
 const limitItems = ref([5, 10, 20])
 
-function isSelected(code: string) {
-  return selected.value.includes(code)
+function isSelected(id: string) {
+  return selected.value.includes(id)
 }
 
-function toggle(code: string) {
-  if (isSelected(code)) {
-    selected.value = selected.value.filter(c => c !== code)
+function toggle(id: string) {
+  if (isSelected(id)) {
+    selected.value = selected.value.filter(c => c !== id)
   } else {
-    selected.value = props.multiple ? [...selected.value, code] : [code]
+    selected.value = props.multiple ? [...selected.value, id] : [id]
   }
 }
 
-function getRowItems(row: Credential): DropdownMenuItem[] {
+function getRowItems(row: CredentialSchema): DropdownMenuItem[] {
   return [
     { type: 'label', label: 'Actions' },
     {
-      label: 'Copy credential code',
+      label: 'Copy credential id',
       icon: 'i-lucide-copy',
       onSelect() {
-        navigator.clipboard.writeText(row.code.toString())
+        navigator.clipboard.writeText(row.id.toString())
         toast.add({
           title: 'Copied to clipboard',
-          description: 'Credential code copied to clipboard'
+          description: 'Credential id copied to clipboard'
         })
       }
     },
     { type: 'separator' },
-    { label: 'View details', icon: 'i-lucide-list', to: `/credentials/${row.code}` },
+    { label: 'View details', icon: 'i-lucide-list', to: `/credentials/${row.id}` },
     { type: 'separator' },
     {
       label: 'Delete',
       icon: 'i-lucide-trash',
       color: 'error',
       async onSelect() {
-        await remove(row.code)
+        await remove(row.id)
       }
     }
   ]
 }
 
-function onSelectClick(e: MouseEvent, code: string) {
+function onSelectClick(e: MouseEvent, id: string) {
   e.stopPropagation()
-  toggle(code)
+  toggle(id)
   model.value = props.multiple ? selected.value : (selected.value[0] || null)
 }
 
-function getRowAttrs(row: Credential) {
+function getRowAttrs(row: CredentialSchema) {
   return {
     class: [
       'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800',
-      props.selectable && selected.value?.includes(row.code) ? 'bg-gray-50/60 dark:bg-gray-800/60' : ''
+      props.selectable && selected.value?.includes(row.id) ? 'bg-gray-50/60 dark:bg-gray-800/60' : ''
     ].join(' '),
-    onClick: () => toggle(row.code)
+    onClick: () => toggle(row.id)
   }
 }
 
-const columns = computed<TableColumn<Credential>[]>(() => {
-  const cols: TableColumn<Credential>[] = []
+const columns = computed<TableColumn<CredentialSchema>[]>(() => {
+  const cols: TableColumn<CredentialSchema>[] = []
 
   if (props.selectable && props.multiple) {
     cols.push({
       id: 'select',
       header: () => {
         const pageItems = items.value
-        const pageCodes = pageItems.map(i => i.code)
-        const pageSelected = pageCodes.filter(code => selected.value.includes(code))
+        const pageIds = pageItems.map(i => i.id)
+        const pageSelected = pageIds.filter(id => selected.value.includes(id))
         const allSelected = pageItems.length > 0 && pageSelected.length === pageItems.length
         const someSelected = pageSelected.length > 0 && !allSelected
         return (
@@ -113,10 +112,10 @@ const columns = computed<TableColumn<Credential>[]>(() => {
             onUpdate:modelValue={(value: boolean | 'indeterminate') => {
               const shouldSelect = !!value
               if (shouldSelect) {
-                const merged = new Set([...selected.value, ...pageCodes])
+                const merged = new Set([...selected.value, ...pageIds])
                 selected.value = Array.from(merged)
               } else {
-                selected.value = selected.value.filter(code => !pageCodes.includes(code))
+                selected.value = selected.value.filter(id => !pageIds.includes(id))
               }
               model.value = selected.value
             }}
@@ -124,17 +123,17 @@ const columns = computed<TableColumn<Credential>[]>(() => {
         )
       },
       cell: ({ row }) => {
-        const code = row.original.code
-        const checked = isSelected(code)
+        const id = row.original.id
+        const checked = isSelected(id)
         return (
           <UCheckbox
             modelValue={checked}
             aria-label="Select row"
             onUpdate:modelValue={(value: boolean | 'indeterminate') => {
               if (value) {
-                if (!checked) selected.value = [...selected.value, code]
+                if (!checked) selected.value = [...selected.value, id]
               } else {
-                selected.value = selected.value.filter(c => c !== code)
+                selected.value = selected.value.filter(c => c !== id)
               }
               model.value = selected.value
             }}
@@ -174,7 +173,7 @@ const columns = computed<TableColumn<Credential>[]>(() => {
           <div>
             <p class="font-medium text-highlighted">{row.original.name}</p>
             <div class="flex items-center gap-2 text-sm text-muted">
-              <span class="font-mono">{row.original.code}</span>
+              <span class="font-mono">{row.original.id}</span>
             </div>
           </div>
         </div>
@@ -199,15 +198,15 @@ const columns = computed<TableColumn<Credential>[]>(() => {
       id: 'actions',
       header: () => {},
       cell: ({ row }) => {
-        const code = row.original.code
-        const _isSelected = isSelected(code)
+        const id = row.original.id
+        const _isSelected = isSelected(id)
         return (
           <div class="text-right px-1">
             <UButton
               size="xs"
               color={_isSelected ? 'primary' : 'neutral'}
               variant={_isSelected ? 'solid' : 'outline'}
-              onClick={(e: MouseEvent) => onSelectClick(e, code)}
+              onClick={(e: MouseEvent) => onSelectClick(e, id)}
             >
               {_isSelected ? 'Selected' : 'Select'}
             </UButton>
