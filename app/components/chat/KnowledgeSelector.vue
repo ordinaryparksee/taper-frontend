@@ -13,7 +13,7 @@ const props = withDefaults(defineProps<{
   variant: 'ghost'
 })
 
-const model = defineModel<string[] | string | null>({})
+const model = defineModel<string[] | string>({})
 
 const app = useAppConfig()
 const { items } = useKnowledges(computed(() => props.projectCode))

@@ -4,7 +4,13 @@ import type { Knowledge, KnowledgeRetrievedItem } from './knowledge'
 
 export type ChatRole = 'system' | 'user' | 'assistant'
 export type ChatStatus = 'PENDING' | 'COMPLETED' | 'FAILED'
-export type MessageMetadata = { id: string, status: ChatStatus, knowledge?: Record<string, unknown>, [key: string]: any }
+export type MessageMetadata = {
+  id: string
+  status: ChatStatus
+  knowledge?: Record<string, unknown>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any
+}
 
 export interface Chat {
   id: string

@@ -35,6 +35,8 @@ export function useChat(conversationCode?: string | null) {
     return streaming.value ? 'streaming' : loading.value ? 'submitted' : 'ready'
   })
 
+  console.log(session)
+
   if (_conversationCode.value) {
     const { data, execute } = useApi<Chat[]>(`/conversations/${_conversationCode.value}/messages`, {
       params: {
@@ -187,16 +189,23 @@ export function useChat(conversationCode?: string | null) {
   function setKnowledgePart(message: UIMessage<MessageMetadata>, knowledges: KnowledgeRetrievedItem[]) {
     if (!knowledges) return
 
-    let part = message.parts.find(part => part.type === 'data-knowledge')
-    if (!part) {
+    let part
+
+    for (const _part of message.parts) {
+      if (_part.type === 'data-knowledge') {
+        part = _part
+      }
+    }
+
+    if (part) {
+      part.data = knowledges
+    } else {
       part = {
-        type: 'data-knowledge',
-        data: []
+        type: 'data-knowledge' as const,
+        data: knowledges
       }
       message.parts.push(part)
     }
-
-    part.data = knowledges
   }
 
   async function handleChat(handler: () => Promise<Chat>, chatId?: string | null) {
@@ -330,7 +339,7 @@ export function useChat(conversationCode?: string | null) {
           setKnowledgePart(assistantMessage, chat.metadata?.knowledge_retrieved || [])
         }
       })
-      eventSource.value?.addEventListener('error', async (event: Event) => {
+      eventSource.value?.addEventListener('error', async (event: Event & { data: string }) => {
         if (event.data) {
           const error = JSON.parse(event.data)
           reject(new ChatError(error.message, error.code))
@@ -339,6 +348,7 @@ export function useChat(conversationCode?: string | null) {
         }
       })
       eventSource.value?.addEventListener('close', async (event) => {
+        console.log(event)
         close()
         streaming.value = false
         streamId.value = null

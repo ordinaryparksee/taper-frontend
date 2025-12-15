@@ -73,9 +73,10 @@ async function handleSubmit() {
   }
 }
 
-function handleRegenerate(e: MouseEvent, message?: UIMessage<MessageMetadata>) {
-  if (message?.metadata) {
-    resend(message.metadata.id)
+function handleRegenerate(e: MouseEvent, message?: UIMessage) {
+  const _message = message as UIMessage<MessageMetadata>
+  if (_message?.metadata) {
+    resend(_message.metadata.id)
   } else if (lastChatId.value) {
     resend(lastChatId.value)
   }
@@ -155,36 +156,38 @@ function handleCopy(e: MouseEvent, message: UIMessage) {
           v-for="(part, index) in (message.parts as any[])"
           :key="`${message.id}-${part.type}-${index}${'state' in part ? `-${part.state}` : ''}`"
         >
-          <UCollapsible
+          <div
             v-if="part.type === 'data-knowledge' && part.data.length > 0"
+            class="mt-2"
           >
-            <UButton
-              leading-icon="i-lucide-library"
-              variant="subtle"
+            <UTabs
               color="neutral"
-              size="sm"
+              variant="link"
+              :items="[
+                {
+                  label: 'Referenced Knowledge',
+                  description: 'asdasd',
+                  slot: 'knowledge' as const
+                }
+              ]"
+              class="w-full"
             >
-              참고된 지식
-            </UButton>
-            <template #content>
-              <div class="p-3 text-xs text-muted bg-white rounded-sm">
-                <div class="flex flex-col gap-2">
-                  <div
-                    v-for="(source, sIndex) in part.data"
-                    :key="sIndex"
-                    class="p-2"
-                  >
-<!--                    <div class="font-medium mb-1">-->
-<!--                      {{ source.name || message.metadata.knowledge?.name || '알 수 없는 문서' }}-->
-<!--                    </div>-->
-                    <div class="line-clamp-2 opacity-80">
-                      {{ source.chunk_content }}
+              <template #knowledge>
+                <UAccordion
+                  :items="part.data.map((item: KnowledgeRetrievedItem, index: number) => ({
+                    label: `${item.metadata?.filename} (${item.chunk_number})`,
+                    value: index
+                  }))"
+                >
+                  <template #content="{ item }">
+                    <div v-if="item.value">
+                      {{ part.data[item.value].chunk_content }}
                     </div>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </UCollapsible>
+                  </template>
+                </UAccordion>
+              </template>
+            </UTabs>
+          </div>
           <ChatReasoning
             v-else-if="part.type === 'reasoning'"
             :text="part.text"
