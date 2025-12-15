@@ -52,7 +52,19 @@ export function detectAvatar(_model?: string | null): AvatarProps | undefined {
 }
 
 export function useModels(type?: 'chat' | 'embedding' | 'rerank' | null) {
-  const rawModels = useState<Model[]>('models', () => [])
+  const allModels = useState<Model[]>('all_models', () => [])
+  const chatModels = useState<Model[]>('chat_models', () => [])
+  const embeddingModels = useState<Model[]>('embedding_models', () => [])
+  const rerankModels = useState<Model[]>('rerank_models', () => [])
+
+  let rawModels = allModels
+  if (type === 'chat') {
+    rawModels = chatModels
+  } else if (type === 'embedding') {
+    rawModels = embeddingModels
+  } else if (type === 'rerank') {
+    rawModels = rerankModels
+  }
 
   if (rawModels.value.length === 0) {
     const { data } = useApi<Model[]>(`/models`, {

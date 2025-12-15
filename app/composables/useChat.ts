@@ -46,7 +46,7 @@ export function useChat(conversationCode?: string | null) {
     execute().then(async () => {
       const chats = data.value
       credentialCode.value = chats[chats.length - 1]?.credential_code || null
-      knowledgeCodes.value = chats[chats.length - 1]?.knowledge_codes || []
+      knowledgeCodes.value = chats[chats.length - 1]?.knowledges.map(knowledge => knowledge.code) || []
 
       messages.value = []
       for (const chat of chats) {
@@ -125,6 +125,10 @@ export function useChat(conversationCode?: string | null) {
       }
     }
 
+    setTextPart(assistantMessage, chat.completion || '')
+    setReasoningPart(assistantMessage, chat.reasoning || '')
+    setKnowledgePart(assistantMessage, chat.metadata?.knowledge_retrieved || [])
+
     return assistantMessage
   }
 
@@ -180,7 +184,7 @@ export function useChat(conversationCode?: string | null) {
     part.text = text
   }
 
-  function setKnowledgePart(message: UIMessage<MessageMetadata>, knowledges: KnowledgeRetrievalItem[]) {
+  function setKnowledgePart(message: UIMessage<MessageMetadata>, knowledges: KnowledgeRetrievedItem[]) {
     if (!knowledges) return
 
     let part = message.parts.find(part => part.type === 'data-knowledge')
@@ -247,10 +251,10 @@ export function useChat(conversationCode?: string | null) {
       body: {
         model: model.value || 'openrouter/x-ai/grok-4.1-fast',
         credential_code: credentialCode.value,
-        knowledge_codes: knowledgeCodes.value,
         message: {
           content: message,
-          file_ids: fileIds
+          file_ids: fileIds,
+          knowledge_codes: knowledgeCodes.value
         },
         stateful: statefulMode.value,
         streaming: streamingMode.value,
@@ -323,7 +327,7 @@ export function useChat(conversationCode?: string | null) {
         if (assistantMessage) {
           setTextPart(assistantMessage, chat.completion)
           setReasoningPart(assistantMessage, chat.reasoning)
-          setKnowledgePart(assistantMessage, chat.knowledge_retrieved || [])
+          setKnowledgePart(assistantMessage, chat.metadata?.knowledge_retrieved || [])
         }
       })
       eventSource.value?.addEventListener('error', async (event: Event) => {

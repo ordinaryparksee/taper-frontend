@@ -30,14 +30,12 @@ export interface Chat {
   total_tokens: number | null
   status: ChatStatus
   metadata?: {
-    knowledge?: Record<string, unknown>
+    knowledge_retrieved?: KnowledgeRetrievedItem[]
   }
   files: File[]
   knowledges: Knowledge[]
   created_at: Date
   updated_at: Date
-
-  knowledge_retrieved: KnowledgeRetrievedItem[]
 
   // 스트림 용으로 매번 concat하는것 보다는 자원소모가 적음
   reasoning_chunks?: string[]
