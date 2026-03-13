@@ -30,7 +30,7 @@ const nodeTypes = {
 const paneContextMenuItems = ref<ContextMenuItem[][]>([
   [
     {
-      label: 'Starting node',
+      label: 'Knowledge node',
       children: [
         {
           label: 'Pending knowledge file',
@@ -47,14 +47,9 @@ const paneContextMenuItems = ref<ContextMenuItem[][]>([
               }
             })
           }
-        }
-      ]
-    },
-    {
-      label: 'Embedding node',
-      children: [
+        },
         {
-          label: 'Download file',
+          label: 'Download knowledge file',
           icon: app.ui.icons.download,
           onSelect() {
             addNodes({
@@ -69,7 +64,12 @@ const paneContextMenuItems = ref<ContextMenuItem[][]>([
               }
             })
           }
-        },
+        }
+      ]
+    },
+    {
+      label: 'Embedding node',
+      children: [
         {
           label: 'Markdown parser',
           icon: 'i-material-symbols-markdown-sharp'

@@ -15,7 +15,7 @@ const props = withDefaults(defineProps<{
 
 const emits = defineEmits<{
   (e: 'onNewConversation', conversationId: string): void
-  (e: 'onChatComplete', chat: ChatSchema): void
+  (e: 'onChatComplete', chat: ChatType): void
 }>()
 
 const components = {

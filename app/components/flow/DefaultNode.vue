@@ -2,6 +2,7 @@
 import type { ZodStandardJSONSchemaPayload } from 'zod/v4/core'
 import type { NodeProps } from '@vue-flow/core'
 import { Handle, Position } from '@vue-flow/core'
+import { useDataTypeComponent } from './useDataTypeComponent'
 
 interface DefaultNodeProps<I = unknown, O = unknown> extends NodeProps {
   inputSchemas?: ZodStandardJSONSchemaPayload<I>[]
@@ -9,6 +10,8 @@ interface DefaultNodeProps<I = unknown, O = unknown> extends NodeProps {
 }
 
 const props = defineProps<DefaultNodeProps>()
+
+const DataTypeComponent = useDataTypeComponent()
 </script>
 
 <template>
@@ -26,18 +29,18 @@ const props = defineProps<DefaultNodeProps>()
           <strong>
             {{ props.data.label }}
           </strong>
-          <div v-if="props.inputSchemas">
+          <div v-if="props.inputSchemas" class="flex items-center gap-1">
             (
-            <UBadge
+            <FlowDataType
               v-for="inputSchema in props.inputSchemas"
               :key="inputSchema.id"
-            >
-              {{ inputSchema.id }}
-            </UBadge>
+              :schema="inputSchema"
+            />
             )
           </div>
-          <div v-if="props.outputSchema">
-            : <UBadge>{{ props.outputSchema.id }}</UBadge>
+          <div v-if="props.outputSchema" class="flex items-center gap-1">
+            <DataTypeComponent value="value" />
+            : <FlowDataType :schema="props.outputSchema" />
           </div>
         </div>
       </slot>

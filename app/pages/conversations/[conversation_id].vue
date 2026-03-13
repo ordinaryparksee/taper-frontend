@@ -39,7 +39,7 @@ async function handleNewConversation(id: string) {
   window.history.replaceState({}, '', `/conversations/${conversationId.value}`)
 }
 
-async function handleChatComplete(_chat: ChatSchema) {
+async function handleChatComplete(_chat: ChatType) {
   await execute()
 }
 </script>

@@ -38,7 +38,7 @@ export function useChat(conversationId?: string | null) {
   console.log(session)
 
   if (_conversationId.value) {
-    const { data, execute } = useApi<PaginatedResponse<ChatSchema>>(`/conversations/${_conversationId.value}/messages`, {
+    const { data, execute } = useApi<PaginatedResponse<ChatType>>(`/conversations/${_conversationId.value}/messages`, {
       params: {
         project_id: project.value?.id,
         conversation_id: _conversationId.value
@@ -79,7 +79,7 @@ export function useChat(conversationId?: string | null) {
     return response.data
   }
 
-  function convertChatToUserMessage(chat: ChatSchema): UIMessage<MessageMetadata> {
+  function convertChatToUserMessage(chat: ChatType): UIMessage<MessageMetadata> {
     const parts: UIMessagePart<UIDataTypes, UITools>[] = []
 
     parts.push({
@@ -109,7 +109,7 @@ export function useChat(conversationId?: string | null) {
     return userMessage
   }
 
-  function convertChatToAssistantMessage(chat: ChatSchema): UIMessage<MessageMetadata> {
+  function convertChatToAssistantMessage(chat: ChatType): UIMessage<MessageMetadata> {
     const parts: UIMessagePart<UIDataTypes, UITools>[] = []
 
     parts.push({
@@ -208,7 +208,7 @@ export function useChat(conversationId?: string | null) {
     }
   }
 
-  async function handleChat(handler: () => Promise<ChatSchema>, chatId?: string | null) {
+  async function handleChat(handler: () => Promise<ChatType>, chatId?: string | null) {
     error.value = undefined
     loading.value = true
 
@@ -246,12 +246,12 @@ export function useChat(conversationId?: string | null) {
     }
   }
 
-  async function prepareCompletion(message: string, fileIds: string[] = []): Promise<ChatSchema> {
+  async function prepareCompletion(message: string, fileIds: string[] = []): Promise<ChatType> {
     if (message.length < 1) {
       throw new Error('Prompt is required')
     }
 
-    const chat = await $api<BaseResponse<ChatSchema>>(`/chat`, {
+    const chat = await $api<BaseResponse<ChatType>>(`/chat`, {
       method: 'POST',
       params: {
         project_id: project.value?.id,
@@ -283,7 +283,7 @@ export function useChat(conversationId?: string | null) {
   }
 
   async function prepareRegenerate(chatId: string) {
-    const chat = await $api<BaseResponse<ChatSchema>>(`/chat/${chatId}`, {
+    const chat = await $api<BaseResponse<ChatType>>(`/chat/${chatId}`, {
       method: 'PUT',
       params: {
         project_id: project.value?.id,
@@ -299,7 +299,7 @@ export function useChat(conversationId?: string | null) {
     return chat.data
   }
 
-  async function stream(chat: ChatSchema) {
+  async function stream(chat: ChatType) {
     if (!chat.stream_id) return
 
     streamId.value = chat.stream_id

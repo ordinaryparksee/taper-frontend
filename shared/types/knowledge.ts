@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export type KnowledgeSplitMode = 'PAGE_BASE' | 'CONTEXT_BASE' | null
 
-const Knowledge = z.object({
+export const KnowledgeSchema = z.object({
   id: z.string(),
   project_id: z.string(),
   connection_id: z.string().nullable(),
@@ -20,15 +20,14 @@ const Knowledge = z.object({
 }).register(z.globalRegistry, {
   id: 'Knowledge'
 })
-export type KnowledgeType = z.infer<typeof Knowledge>
-export const KnowledgeSchema = Knowledge.toJSONSchema()
+export type KnowledgeType = z.infer<typeof KnowledgeSchema>
 
 export type KnowledgeFileStatus = 'SCHEDULED' | 'STARTED' | 'LOADING'
   | 'CHUNKING' | 'CHUNKING_FAILED'
   | 'EMBEDDING' | 'EMBEDDING_FAILED'
   | 'COMPLETED' | 'FAILED'
 
-const KnowledgeFile = z.object({
+export const KnowledgeFileSchema = z.object({
   knowledge_id: z.string(),
   file_id: z.string(),
   file_name: z.string(),
@@ -57,10 +56,9 @@ const KnowledgeFile = z.object({
   id: 'KnowledgeFile'
 })
 
-export type KnowledgeFileType = z.infer<typeof KnowledgeFile>
-export const KnowledgeFileSchema = KnowledgeFile.toJSONSchema()
+export type KnowledgeFileType = z.infer<typeof KnowledgeFileSchema>
 
-const KnowledgeRetrievedItem = z.object({
+export const KnowledgeRetrievedItemSchema = z.object({
   project_id: z.string(),
   knowledge_id: z.string(),
   file_id: z.string(),
@@ -72,5 +70,4 @@ const KnowledgeRetrievedItem = z.object({
 }).register(z.globalRegistry, {
   id: 'KnowledgeRetrievedItem'
 })
-export type KnowledgeRetrievedItemType = z.infer<typeof KnowledgeRetrievedItem>
-export const KnowledgeRetrievedItemSchema = KnowledgeRetrievedItem.toJSONSchema()
+export type KnowledgeRetrievedItemType = z.infer<typeof KnowledgeRetrievedItemSchema>

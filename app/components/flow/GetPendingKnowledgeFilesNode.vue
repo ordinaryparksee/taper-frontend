@@ -10,7 +10,7 @@ const props = defineProps<NodeProps>()
     :data="{
       label: props.data.label || 'Pending knowledge files'
     }"
-    :output-schema="KnowledgeFileSchema"
+    :output-schema="KnowledgeFileSchema.array().toJSONSchema()"
   >
     Body
   </FlowDefaultNode>

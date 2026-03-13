@@ -3,7 +3,7 @@ import { z } from 'zod'
 export type FileDriver = 'S3' | 'LOCAL'
 export type FileStatus = 'PENDING' | 'UPLOADING' | 'UPLOADED' | 'COMPLETED'
 
-const File =z.object({
+export const FileSchema = z.object({
   id: z.string(),
   namespace: z.string(),
   driver: z.enum(['S3', 'LOCAL']),
@@ -20,4 +20,3 @@ const File =z.object({
   id: 'File'
 })
 export type FileType = z.infer<typeof File>
-export const FileSchema = File.toJSONSchema()

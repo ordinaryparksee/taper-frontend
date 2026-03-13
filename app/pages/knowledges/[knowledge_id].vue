@@ -52,7 +52,7 @@ if (!isNew.value) {
   }
 }
 
-const knowledgeSchema = z.object({
+const knowledgeFormSchema = z.object({
   name: z.string().min(2, 'Too short'),
   connection_id: z.string().min(1, 'Required').nullish(),
   embedding_model_credential_id: z.string().min(1, 'Required').nullish(),
@@ -76,7 +76,7 @@ const knowledgeSchema = z.object({
   path: ['connection_id'],
   message: 'Required'
 })
-type KnowledgeFormSchema = z.output<typeof knowledgeSchema>
+type KnowledgeFormSchema = z.output<typeof knowledgeFormSchema>
 
 const form = ref<HTMLFormElement>()
 const submitting = ref(false)
@@ -216,7 +216,7 @@ async function onReset() {
         id="knowledge"
         ref="form"
         class="space-y-4"
-        :schema="knowledgeSchema"
+        :schema="knowledgeFormSchema"
         :state="knowledge"
         @submit="onSubmit"
       >
