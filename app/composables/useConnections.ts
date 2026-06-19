@@ -2,7 +2,7 @@ import type { FetchError } from 'ofetch'
 
 interface UseConnectionsOptions {
   projectId?: MaybeRefOrGetter<string | null | undefined>
-  drivers?: MaybeRefOrGetter<string[]>
+  providers?: MaybeRefOrGetter<string[]>
 }
 
 export function useConnections(options: UseConnectionsOptions = {}) {
@@ -18,7 +18,7 @@ export function useConnections(options: UseConnectionsOptions = {}) {
     page: page.value,
     limit: limit.value,
     query: query.value,
-    driver: toValue(options.drivers)
+    provider: toValue(options.providers)
   }))
 
   const { data, status, refresh } = useApi<PaginatedResponse<ConnectionSchema>>('/connections', {

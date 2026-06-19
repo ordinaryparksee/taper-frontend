@@ -8,13 +8,13 @@ const props = withDefaults(defineProps<{
   multiple?: boolean
   control?: boolean
   projectId?: string | null
-  drivers?: string[]
+  providers?: string[]
 }>(), {
   selectable: false,
   multiple: false,
   control: false,
   projectId: null,
-  drivers: () => []
+  providers: () => []
 })
 
 const app = useAppConfig()
@@ -40,7 +40,7 @@ const {
   remove
 } = useConnections({
   projectId: computed(() => props.projectId || project.value?.id),
-  drivers: computed(() => props.drivers)
+  providers: computed(() => props.providers)
 })
 
 const limitItems = ref([5, 10, 20])
@@ -196,7 +196,7 @@ const columns = computed<TableColumn<ConnectionSchema>[]>(() => {
       cell: ({ row }) => (
         <div class="flex items-center gap-2">
           {
-            row.original.driver === 'OPENSEARCH'
+            row.original.provider === 'OPENSEARCH'
               ? (
                   <UAvatar
                     src="/icon/opensearch_mark_default.svg"
@@ -204,7 +204,7 @@ const columns = computed<TableColumn<ConnectionSchema>[]>(() => {
                     size="sm"
                   />
                 )
-              : row.original.driver === 'POSTGRESQL'
+              : row.original.provider === 'POSTGRESQL'
                 ? (
                     <UAvatar
                       src="/icon/postgres_mark_default.png"
@@ -212,7 +212,7 @@ const columns = computed<TableColumn<ConnectionSchema>[]>(() => {
                       size="sm"
                     />
                   )
-                : row.original.driver === 'SSH'
+                : row.original.provider === 'SSH'
                   ? (
                       <UAvatar
                         icon="i-lucide-terminal"

@@ -26,7 +26,7 @@ const connectionSchema = z.object({
   ssh_tunnel_connection_id: z.string().nullable(),
   proxy_connection_id: z.string().nullable(),
   name: z.string().min(2, 'Too short'),
-  driver: z.enum(['OPENSEARCH', 'PGVECTOR', 'POSTGRESQL', 'SSH', 'MYSQL', 'PROXY']),
+  provider: z.enum(['OPENSEARCH', 'PGVECTOR', 'POSTGRESQL', 'SSH', 'MYSQL', 'PROXY']),
   uri: z.string()
 })
 type ConnectionFormSchema = z.output<typeof connectionSchema>
@@ -40,7 +40,7 @@ const connection = reactive<Partial<ConnectionFormSchema>>({
   ssh_tunnel_connection_id: data.value?.data.ssh_tunnel_connection_id ?? null,
   proxy_connection_id: data.value?.data.proxy_connection_id ?? null,
   name: data.value?.data.name ?? '',
-  driver: data.value?.data.driver ?? 'OPENSEARCH',
+  provider: data.value?.data.provider ?? 'OPENSEARCH',
   uri: data.value?.data.uri ?? ''
 })
 
@@ -112,7 +112,7 @@ async function onSubmit(event: FormSubmitEvent<ConnectionFormSchema>) {
   }
 }
 
-const driverItems = ref([
+const providerItems = ref([
   {
     label: 'OpenSearch',
     value: 'OPENSEARCH',
@@ -153,8 +153,8 @@ const driverItems = ref([
     icon: 'i-lucide-shield'
   }
 ] satisfies SelectItem[])
-const driverAvatar = computed(() => driverItems.value.find(item => item.value === connection.driver)?.avatar)
-const driverIcon = computed(() => driverItems.value.find(item => item.value === connection.driver)?.icon)
+const providerAvatar = computed(() => providerItems.value.find(item => item.value === connection.provider)?.avatar)
+const providerIcon = computed(() => providerItems.value.find(item => item.value === connection.provider)?.icon)
 
 const items = computed(() => [
   { label: 'Connections', icon: app.ui.icons.connection, to: '/connections' },
@@ -245,20 +245,20 @@ const items = computed(() => [
           </UFormField>
 
           <UFormField
-            name="driver"
-            label="Driver"
-            description="Select the connection driver."
+            name="provider"
+            label="Provider"
+            description="Select the connection provider."
             required
             class="space-y-2 mt-4"
           >
             <USelect
-              v-model="connection.driver"
-              :items="driverItems"
+              v-model="connection.provider"
+              :items="providerItems"
               option-attribute="label"
               value-attribute="value"
               size="lg"
-              :avatar="driverAvatar"
-              :icon="driverIcon"
+              :avatar="providerAvatar"
+              :icon="providerIcon"
               :disabled="submitting"
               class="w-full"
             />
@@ -308,7 +308,7 @@ const items = computed(() => [
               v-model="connection.ssh_tunnel_connection_id"
               :multiple="false"
               :project-id="project.id"
-              :drivers="['SSH']"
+              :providers="['SSH']"
               :disabled="submitting"
               button-label="Select SSH connection"
             />
@@ -325,7 +325,7 @@ const items = computed(() => [
               v-model="connection.proxy_connection_id"
               :multiple="false"
               :project-id="project.id"
-              :drivers="['PROXY']"
+              :providers="['PROXY']"
               :disabled="submitting"
               button-label="Select proxy connection"
             />

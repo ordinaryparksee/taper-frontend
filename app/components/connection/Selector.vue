@@ -4,13 +4,13 @@ const props = withDefaults(defineProps<{
   projectId?: string | null
   buttonLabel?: string
   disabled?: boolean
-  drivers?: string[]
+  providers?: string[]
 }>(), {
   modelValue: null,
   multiple: false,
   buttonLabel: 'Select connection',
   disabled: false,
-  drivers: () => []
+  providers: () => []
 })
 
 const model = defineModel<string[] | string | null>({})
@@ -96,7 +96,7 @@ function confirm() {
             :selectable="true"
             :multiple="props.multiple"
             :project-id="props.projectId"
-            :drivers="props.drivers"
+            :providers="props.providers"
             @update:selected="(value) => {
               selected = value
               if (!props.multiple) confirm()

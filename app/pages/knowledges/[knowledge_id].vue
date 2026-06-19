@@ -389,7 +389,7 @@ async function onReset() {
                 :multiple="false"
                 :project-id="project?.id || null"
                 :disabled="submitting"
-                :drivers="['OPENSEARCH', 'PGVECTOR']"
+                :providers="['OPENSEARCH', 'PGVECTOR']"
                 button-label="Select connection"
               />
             </div>
