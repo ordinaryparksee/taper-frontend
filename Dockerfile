@@ -16,6 +16,8 @@ RUN pnpm install --frozen-lockfile
 
 # Build stage
 FROM base AS build
+ENV CI=true \
+    NODE_OPTIONS=--max-old-space-size=4096
 COPY --from=deps /srv/taper/node_modules ./node_modules
 COPY . .
 RUN pnpm build
